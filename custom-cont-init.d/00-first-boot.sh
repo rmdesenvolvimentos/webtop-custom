@@ -21,9 +21,15 @@ fi
 # 2. Copia arquivos de modelo para /config (incluindo diretórios ocultos como .config)
 if [ -d /config-template ]; then
     echo "[first-boot] Sincronizando arquivos de configuração e atalhos..."
-    # Usar . para copiar todos os arquivos e pastas ocultas
     cp -a /config-template/. /config/ 2>/dev/null || true
     rm -f /config/win11-theme-pack.tar.gz 2>/dev/null || true
+
+    # Garante que o painel e tema sejam os do Windows 11 mesmo em volumes existentes
+    if ! grep -q "whiskermenu" /config/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-panel.xml 2>/dev/null; then
+        echo "[first-boot] Forçando perfil Windows 11 no painel e temas..."
+        mkdir -p /config/.config/xfce4/xfconf/xfce-perchannel-xml
+        cp -af /config-template/.config/xfce4/xfconf/xfce-perchannel-xml/* /config/.config/xfce4/xfconf/xfce-perchannel-xml/ 2>/dev/null || true
+    fi
 fi
 
 # 3. Forçar /defaults/xfce a usar a barra e tema do Windows 11 (evita fallback do LinuxServer)

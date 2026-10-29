@@ -1,12 +1,14 @@
 #!/bin/bash
 # 10-install-apps.sh: Instalação de pacotes e plugins da interface Windows 11
 
-if ! which code >/dev/null 2>&1; then
+if ! dpkg -s xfce4-docklike-plugin >/dev/null 2>&1; then
     echo '[custom-init] Instalando VS Code, Whisker Menu, Docklike, Genmon e dependências...'
-    curl -sSL https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor -o /etc/apt/keyrings/packages.microsoft.gpg
+    mkdir -p /etc/apt/keyrings
+    curl -sSL https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor -o /etc/apt/keyrings/packages.microsoft.gpg 2>/dev/null || true
     echo 'deb [arch=amd64,arm64,armhf signed-by=/etc/apt/keyrings/packages.microsoft.gpg] https://packages.microsoft.com/repos/code stable main' > /etc/apt/sources.list.d/vscode.list
     apt-get update
-    apt-get install -y code librsvg2-common scrot xfce4-whiskermenu-plugin xfce4-docklike-plugin xfce4-genmon-plugin python3-cairo python3-gi-cairo xclip zenity
+    apt-get install -y --no-install-recommends xfce4-whiskermenu-plugin xfce4-docklike-plugin xfce4-genmon-plugin librsvg2-common scrot python3-cairo python3-gi-cairo xclip zenity code 2>/dev/null || \
+    apt-get install -y xfce4-whiskermenu-plugin xfce4-docklike-plugin xfce4-genmon-plugin librsvg2-common scrot python3-cairo python3-gi-cairo xclip zenity
     echo '[custom-init] Pacotes instalados com sucesso.'
 fi
 
