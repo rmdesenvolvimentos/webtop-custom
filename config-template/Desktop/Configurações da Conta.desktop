@@ -1,0 +1,11 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Configurações da Conta
+GenericName=Perfil e Segurança
+Comment=Alterar nome de usuário, senha e tempo de bloqueio da tela
+Exec=account-settings-gui
+Icon=user-info
+Terminal=false
+StartupNotify=true
+Categories=Settings;GTK;System;

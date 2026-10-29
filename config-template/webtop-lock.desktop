@@ -1,0 +1,10 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Bloquear
+Comment=Bloquear Sessão / Tela
+Exec=/usr/local/bin/webtop-lock
+Icon=system-lock-screen
+Terminal=false
+Categories=System;Utility;
+Keywords=lock;bloquear;tela;sair;

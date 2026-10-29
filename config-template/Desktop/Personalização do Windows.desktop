@@ -1,0 +1,10 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Personalização do Windows
+Comment=Alterar tema Dark/Light e bordas de janelas
+Exec=/config/set-theme.sh
+Icon=preferences-desktop-theme
+Terminal=false
+StartupNotify=true
+Categories=Settings;DesktopSettings;

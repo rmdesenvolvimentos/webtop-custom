@@ -1,0 +1,12 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Gerenciador de Tarefas
+GenericName=Task Manager
+Comment=Exibe aplicativos e processos em execução e o desempenho do sistema
+Exec=/usr/local/bin/win-taskmgr
+Icon=utilities-system-monitor
+Terminal=false
+Categories=System;Monitor;GTK;
+StartupNotify=true
+StartupWMClass=win_taskmgr.py

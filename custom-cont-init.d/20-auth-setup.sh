@@ -29,8 +29,10 @@ if [ -f /config/account_settings_gui.py ]; then
     ln -sf /config/account_settings_gui.py /usr/local/bin/account-settings-gui
     chmod +x /config/account_settings_gui.py
 fi
-if [ -f /config/Desktop/account-settings.desktop ]; then
-    cp /config/Desktop/account-settings.desktop /usr/share/applications/account-settings.desktop
+if [ -f "/config/Desktop/Configurações da Conta.desktop" ]; then
+    cp "/config/Desktop/Configurações da Conta.desktop" /usr/share/applications/account-settings.desktop 2>/dev/null || true
+elif [ -f /config/Desktop/account-settings.desktop ]; then
+    cp /config/Desktop/account-settings.desktop /usr/share/applications/account-settings.desktop 2>/dev/null || true
 fi
 
 # 5. Restore Windows Task Manager

@@ -1,0 +1,4 @@
+[user]
+pinned=thunar-real;xfce4-terminal;win-store;ai.opencode.desktop;com.google.Chrome;xfce4-screenshooter;
+dockSize=0
+noWindowsListIfSingle=true

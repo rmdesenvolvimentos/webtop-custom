@@ -1,0 +1,10 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Este Computador
+Comment=Explorador de Arquivos
+Exec=thunar /
+Icon=computer
+Terminal=false
+StartupNotify=true
+Categories=FileManager;

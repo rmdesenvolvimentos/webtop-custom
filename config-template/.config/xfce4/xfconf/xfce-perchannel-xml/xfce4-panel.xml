@@ -1,0 +1,126 @@
+<?xml version="1.1" encoding="UTF-8"?>
+
+<channel name="xfce4-panel" version="1.0">
+  <property name="configver" type="int" value="2"/>
+  <property name="panels" type="array">
+    <value type="int" value="1"/>
+    <property name="dark-mode" type="bool" value="true"/>
+    <property name="panel-1" type="empty">
+      <property name="position" type="string" value="p=8;x=960;y=904"/>
+      <property name="length" type="uint" value="100"/>
+      <property name="position-locked" type="bool" value="true"/>
+      <property name="icon-size" type="uint" value="0"/>
+      <property name="size" type="uint" value="39"/>
+      <property name="plugin-ids" type="array">
+        <value type="int" value="1"/>
+        <value type="int" value="2"/>
+        <value type="int" value="3"/>
+        <value type="int" value="6"/>
+        <value type="int" value="7"/>
+        <value type="int" value="8"/>
+        <value type="int" value="20"/>
+      </property>
+      <property name="nrows" type="uint" value="1"/>
+      <property name="border-width" type="uint" value="1"/>
+      <property name="background-style" type="uint" value="0"/>
+      <property name="background-rgba" type="array">
+        <value type="double" value="0.050000000000000003"/>
+        <value type="double" value="0.045833333333333337"/>
+        <value type="double" value="0.045833333333333337"/>
+        <value type="double" value="1"/>
+      </property>
+      <property name="length-adjust" type="bool" value="true"/>
+    </property>
+  </property>
+  <property name="plugins" type="empty">
+    <property name="plugin-1" type="string" value="whiskermenu">
+      <property name="button-icon" type="string" value="/config/windows-start-32.png"/>
+      <property name="button-title" type="string" value="Iniciar"/>
+      <property name="show-button-title" type="bool" value="false"/>
+      <property name="custom-menu" type="bool" value="false"/>
+      <property name="show-generic-names" type="bool" value="false"/>
+      <property name="small" type="bool" value="false"/>
+      <property name="show-tooltips" type="bool" value="true"/>
+      <property name="menu-width" type="int" value="675"/>
+      <property name="menu-height" type="int" value="816"/>
+      <property name="button-single-row" type="bool" value="true"/>
+      <property name="hover-switch-category" type="bool" value="true"/>
+      <property name="position-categories-alternate" type="bool" value="true"/>
+      <property name="show-command-lockscreen" type="bool" value="true"/>
+      <property name="command-switchuser" type="string" value="gdmflexiserver"/>
+      <property name="show-command-menueditor" type="bool" value="false"/>
+      <property name="command-profile" type="string" value=""/>
+      <property name="show-command-profile" type="bool" value="false"/>
+      <property name="favorites" type="array">
+        <value type="string" value="thunar.desktop"/>
+        <value type="string" value="xfce4-terminal-emulator.desktop"/>
+        <value type="string" value="synaptic.desktop"/>
+      </property>
+      <property name="recent" type="array">
+        <value type="string" value="xfce4-terminal.desktop"/>
+        <value type="string" value="org.xfce.mousepad.desktop"/>
+        <value type="string" value="btop.desktop"/>
+        <value type="string" value="wine-Programs-MetaTrader 5-Uninstall.desktop"/>
+        <value type="string" value="xfce-display-settings.desktop"/>
+        <value type="string" value="account-settings.desktop"/>
+        <value type="string" value="xfce-keyboard-settings.desktop"/>
+        <value type="string" value="WinDark.desktop"/>
+        <value type="string" value="WinLight.desktop"/>
+        <value type="string" value="org.pulseaudio.pavucontrol.desktop"/>
+      </property>
+      <property name="command-lockscreen" type="string" value="/usr/local/bin/webtop-lock"/>
+      <property name="command-logout" type="string" value="/usr/local/bin/webtop-lock"/>
+    </property>
+    <property name="plugin-2" type="string" value="docklike">
+      <property name="grouping" type="bool" value="true"/>
+      <property name="flat-buttons" type="bool" value="true"/>
+      <property name="show-handle" type="bool" value="false"/>
+      <property name="show-tooltips" type="bool" value="true"/>
+      <property name="sort-order" type="uint" value="1"/>
+      <property name="middle-click" type="uint" value="2"/>
+      <property name="switch-workspace-on-unminimize" type="bool" value="true"/>
+      <property name="show-wireframes" type="bool" value="false"/>
+      <property name="window-scrolling" type="bool" value="true"/>
+      <property name="include-all-workspaces" type="bool" value="false"/>
+      <property name="show-only-minimized" type="bool" value="false"/>
+      <property name="include-all-monitors" type="bool" value="true"/>
+      <property name="show-labels" type="bool" value="false"/>
+    </property>
+    <property name="plugin-3" type="string" value="separator">
+      <property name="expand" type="bool" value="true"/>
+      <property name="style" type="int" value="0"/>
+    </property>
+    <property name="plugin-6" type="string" value="systray">
+      <property name="square-icons" type="bool" value="true"/>
+      <property name="known-legacy-items" type="array">
+        <value type="string" value="gerenciador de tarefas"/>
+      </property>
+    </property>
+    <property name="plugin-8" type="string" value="clock">
+      <property name="mode" type="uint" value="2"/>
+      <property name="digital-format" type="string" value="%H:%M%n%d/%m/%Y"/>
+      <property name="digital-time-format" type="string" value="%H:%M%n%d/%m/%Y"/>
+      <property name="digital-layout" type="uint" value="3"/>
+      <property name="timezone" type="string" value="Europe/Rome"/>
+      <property name="show-week-numbers" type="bool" value="true"/>
+      <property name="tooltip-format" type="string" value="%A %d %B %Y"/>
+      <property name="digital-time-font" type="string" value="Sans Bold 9"/>
+    </property>
+    <property name="plugin-9" type="string" value="separator">
+      <property name="style" type="uint" value="0"/>
+    </property>
+    <property name="plugin-10" type="string" value="actions"/>
+    <property name="plugin-20" type="string" value="showdesktop">
+      <property name="show-on-hover" type="bool" value="true"/>
+    </property>
+    <property name="plugin-4" type="string" value="separator"/>
+    <property name="plugin-7" type="string" value="genmon">
+      <property name="command" type="string" value="/config/sysmon.sh"/>
+      <property name="update-period" type="int" value="2000"/>
+      <property name="use-label" type="bool" value="false"/>
+      <property name="text" type="string" value="(genmon)"/>
+      <property name="enable-single-row" type="bool" value="true"/>
+      <property name="font" type="string" value="Sans 10"/>
+    </property>
+  </property>
+</channel>

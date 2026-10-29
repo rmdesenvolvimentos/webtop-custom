@@ -1,0 +1,10 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Sair da Conta (Logout)
+Comment=Encerrar sessão e sair para a tela de login
+Exec=/usr/local/bin/webtop-lock
+Icon=system-log-out
+Terminal=false
+Categories=System;Utility;
+Keywords=logout;sair;encerrar;desconectar;
