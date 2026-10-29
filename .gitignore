@@ -1,0 +1,37 @@
+# Sensitive environment variables
+.env
+*.env
+!.env.example
+
+# Runtime persistent data directory
+data/
+config/
+/data/
+/config/
+
+# Wine prefix and temporary logs
+.wine/
+last_run.log
+*.log
+
+# SSL certificates and keys
+ssl/
+*.key
+*.pem
+*.crt
+*.pfx
+
+# Python cache & virtual environments
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+
+# OS and Editor temporary files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*~

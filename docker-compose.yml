@@ -1,0 +1,36 @@
+services:
+  webtop:
+    image: lscr.io/linuxserver/webtop:ubuntu-xfce
+    container_name: webtop
+    hostname: ${HOSTNAME:-cloud-vps}
+    privileged: true
+    security_opt:
+      - seccomp:unconfined
+    environment:
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
+      - TZ=${TZ:-America/Sao_Paulo}
+      - SUBFOLDER=/
+      - TITLE=${TITLE:-Cloud Desktop}
+      - CUSTOM_USER=${CUSTOM_USER:-Admin}
+      - PASSWORD=${PASSWORD:-ChangeMe123!}
+      - LANG=${LANG:-pt_BR.UTF-8}
+      - LANGUAGE=${LANGUAGE:-pt_BR:pt}
+      - LC_ALL=${LC_ALL:-pt_BR.UTF-8}
+      - START_DOCKER=true
+      - SELKIES_PRINTING_ENABLED=false
+      - NO_AT_BRIDGE=1
+      - SELKIES_AUDIO_ENABLED=false
+      - SELKIES_MICROPHONE_ENABLED=false
+      - SELKIES_WEBCAM_ENABLED=false
+      - SELKIES_GAMEPAD_ENABLED=false
+      - SELKIES_FRAMERATE=30
+    ports:
+      - "${PORT_HTTP:-3000}:3000"
+      - "${PORT_HTTPS:-3001}:3001"
+    volumes:
+      - ./data/config:/config
+      - ./custom-cont-init.d:/custom-cont-init.d:ro
+      - ./config-template:/config-template:ro
+    shm_size: 4gb
+    restart: unless-stopped
