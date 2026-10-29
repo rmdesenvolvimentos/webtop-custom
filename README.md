@@ -2,13 +2,34 @@
 
 Uma versão customizada, leve e elegante do **Webtop** (Ubuntu XFCE) da [LinuxServer.io](https://fleet.linuxserver.io/image?name=linuxserver/webtop), transformada em um desktop moderno acessível via navegador com interface inspirada no **Windows 11**, autenticação com tela de bloqueio fluida, loja de aplicativos gráfica, gerenciador de tarefas avançado e ambiente Wine otimizado.
 
+![Área de Trabalho Windows 11](docs/screenshots/03-desktop.png)
+
+---
+
+## 📸 Demonstração da Interface
+
+### 🔒 Tela de Bloqueio & Login (Blur Acrílico)
+| Tela de Bloqueio | Tela de Login |
+| :---: | :---: |
+| ![Lockscreen](docs/screenshots/01-lockscreen.png) | ![Login](docs/screenshots/02-login.png) |
+
+### 🪟 Menu Iniciar & 📁 Gerenciador de Arquivos
+| Menu Iniciar (Whisker Menu) | Gerenciador de Arquivos (Thunar) |
+| :---: | :---: |
+| ![Menu Iniciar](docs/screenshots/04-start-menu.png) | ![Gerenciador de Arquivos](docs/screenshots/07-file-manager.png) |
+
+### 🛍️ Microsoft Store & 📊 Gerenciador de Tarefas
+| Microsoft Store (`win-store`) | Gerenciador de Tarefas (`win_taskmgr`) |
+| :---: | :---: |
+| ![Microsoft Store](docs/screenshots/05-store.png) | ![Gerenciador de Tarefas](docs/screenshots/06-taskmgr.png) |
+
 ---
 
 ## 🚀 Principais Funcionalidades
 
 - **🪟 Interface Estilo Windows 11**:
   - Barra de tarefas centralizada (Docklike) e menu Iniciar categorizado (Whisker Menu).
-  - Papel de parede oficial do Windows 11 e tema escuro moderno.
+  - Papel de parede oficial do Windows 11 Bloom Dark e tema escuro moderno.
 - **🔒 Tela de Bloqueio & Autenticação Customizada**:
   - Login estilo Windows 11 com fundo em blur acrílico, relógio em tempo real e avatar do usuário.
   - Servidor de autenticação leve em Python integrado ao s6-overlay (`auth_server.py`).
@@ -20,6 +41,8 @@ Uma versão customizada, leve e elegante do **Webtop** (Ubuntu XFCE) da [LinuxSe
 - **📊 Gerenciador de Tarefas no Estilo Windows (`win_taskmgr`)**:
   - Monitor em tempo real de uso de CPU, Memória RAM, Disco e Rede.
   - Árvore de processos com encerramento forçado e prioridades.
+- **📁 Gerenciador de Arquivos Estilizado**:
+  - Thunar customizado com tema Eleven-Dark, ícones modernos do Windows 11 e atalhos rápidos.
 - **🍷 Suporte Otimizado a Wine**:
   - Launcher silencioso (`win-launcher`) pré-configurado com Esync/Fsync, ajuste de ptrace e dispositivo de áudio ALSA dummy para rodar executáveis Windows (`.exe`) sem travamentos ou dependências desnecessárias.
 - **⚡ Alta Performance e Baixo Consumo**:
@@ -98,6 +121,8 @@ webtop-custom/
 ├── LICENSE                   # Licença MIT
 ├── README.md                 # Documentação do projeto
 ├── docker-compose.yml        # Definição do serviço Docker
+├── docs/
+│   └── screenshots/          # Capturas de tela demonstrativas
 ├── custom-cont-init.d/       # Scripts de inicialização executados pelo s6-overlay
 │   ├── 00-first-boot.sh      # Inicializa o volume persistente no primeiro boot
 │   ├── 00-hostname.sh        # Configura hostname e resolução local
