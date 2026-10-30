@@ -3,47 +3,95 @@
 
 echo "[first-boot] Verificando integridade das configurações do Windows 11..."
 
-# 1. Se o tema do Windows 11 não estiver instalado em /config, descompactar o pacote
+# 1. Garante que os plugins e dependências essenciais de UI estejam instalados
+if ! dpkg -s xfce4-docklike-plugin >/dev/null 2>&1 || ! dpkg -s librsvg2-common >/dev/null 2>&1; then
+    echo "[first-boot] Instalando plugins essenciais (whiskermenu, docklike, genmon, librsvg)..."
+    export DEBIAN_FRONTEND=noninteractive
+    apt-get update -qq
+    apt-get install -y -qq --no-install-recommends \
+        xfce4-whiskermenu-plugin \
+        xfce4-docklike-plugin \
+        xfce4-genmon-plugin \
+        librsvg2-common \
+        librsvg2-bin \
+        scrot \
+        python3-cairo \
+        python3-gi-cairo \
+        xclip \
+        zenity \
+        hicolor-icon-theme 2>/dev/null || true
+    gdk-pixbuf-query-loaders --update-cache 2>/dev/null || true
+fi
+
+# 2. Descompacta temas, ícones e wallpapers
 if [ -f /config-template/win11-theme-pack.tar.gz ]; then
     if [ ! -d /config/.themes/Windows-11-Dark-Blue ] || [ ! -d /config/.icons/Eleven-Dark ]; then
-        echo "[first-boot] Descompactando temas, ícones e wallpapers do Windows 11..."
+        echo "[first-boot] Descompactando temas, ícones e wallpapers do Windows 11 em /config..."
         tar -xzf /config-template/win11-theme-pack.tar.gz -C /config/ 2>/dev/null || true
     fi
 
-    # Garante disponibilidade global no sistema
+    # Garante disponibilidade global no sistema (/usr/share/themes e /usr/share/icons)
     if [ ! -d /usr/share/themes/Windows-11-Dark-Blue ]; then
-        mkdir -p /usr/share/themes /usr/share/icons
-        tar -xzf /config-template/win11-theme-pack.tar.gz -C /usr/share/ --strip-components=1 .themes 2>/dev/null || true
-        tar -xzf /config-template/win11-theme-pack.tar.gz -C /usr/share/ --strip-components=1 .icons 2>/dev/null || true
+        echo "[first-boot] Instalando temas globais em /usr/share/themes..."
+        mkdir -p /usr/share/themes /usr/share/icons /usr/share/backgrounds
+        tar -xzf /config-template/win11-theme-pack.tar.gz -C /usr/share/themes/ --strip-components=1 .themes 2>/dev/null || true
+    fi
+    if [ ! -d /usr/share/icons/Eleven-Dark ]; then
+        echo "[first-boot] Instalando ícones globais em /usr/share/icons..."
+        mkdir -p /usr/share/icons
+        tar -xzf /config-template/win11-theme-pack.tar.gz -C /usr/share/icons/ --strip-components=1 .icons 2>/dev/null || true
+    fi
+    if [ -d /config/wallpapers ]; then
+        mkdir -p /usr/share/backgrounds
+        cp -af /config/wallpapers/* /usr/share/backgrounds/ 2>/dev/null || true
     fi
 fi
 
-# 2. Copia arquivos de modelo para /config (incluindo diretórios ocultos como .config)
+# 3. Ícones da loja e caches de temas
+mkdir -p /usr/share/icons/hicolor/64x64/apps /usr/share/icons/hicolor/48x48/apps 2>/dev/null || true
+if [ -f /config-template/store-64.png ]; then
+    cp -f /config-template/store-64.png /usr/share/icons/hicolor/64x64/apps/win-store.png 2>/dev/null || true
+    cp -f /config-template/store-48.png /usr/share/icons/hicolor/48x48/apps/win-store.png 2>/dev/null || true
+    [ -d /config/.icons/Eleven/48/apps ] && cp -f /config-template/store-48.png /config/.icons/Eleven/48/apps/win-store.png 2>/dev/null || true
+    [ -d /config/.icons/Eleven/64/apps ] && cp -f /config-template/store-64.png /config/.icons/Eleven/64/apps/win-store.png 2>/dev/null || true
+fi
+
+gtk-update-icon-cache -f -t /config/.icons/Eleven-Dark 2>/dev/null || true
+gtk-update-icon-cache -f -t /config/.icons/Eleven 2>/dev/null || true
+gtk-update-icon-cache -f -t /usr/share/icons/Eleven-Dark 2>/dev/null || true
+gtk-update-icon-cache -f -t /usr/share/icons/Eleven 2>/dev/null || true
+gtk-update-icon-cache -f -t /usr/share/icons/hicolor 2>/dev/null || true
+
+# 4. Copia arquivos de modelo para /config
 if [ -d /config-template ]; then
     echo "[first-boot] Sincronizando arquivos de configuração e atalhos..."
     cp -a /config-template/. /config/ 2>/dev/null || true
     rm -f /config/win11-theme-pack.tar.gz 2>/dev/null || true
 
-    # Garante que o painel e tema sejam os do Windows 11 mesmo em volumes existentes
-    if ! grep -q "whiskermenu" /config/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-panel.xml 2>/dev/null; then
-        echo "[first-boot] Forçando perfil Windows 11 no painel e temas..."
-        mkdir -p /config/.config/xfce4/xfconf/xfce-perchannel-xml
-        cp -af /config-template/.config/xfce4/xfconf/xfce-perchannel-xml/* /config/.config/xfce4/xfconf/xfce-perchannel-xml/ 2>/dev/null || true
-    fi
+    mkdir -p /config/.config/xfce4/xfconf/xfce-perchannel-xml
+    cp -af /config-template/.config/xfce4/xfconf/xfce-perchannel-xml/* /config/.config/xfce4/xfconf/xfce-perchannel-xml/ 2>/dev/null || true
 fi
 
-# 3. Forçar /defaults a usar os padrões Windows 11 (evita fallback do LinuxServer)
-if [ -d /config/.config/xfce4/xfconf/xfce-perchannel-xml ]; then
-    mkdir -p /defaults/xfce 2>/dev/null || true
-    cp -f /config/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-panel.xml /defaults/xfce/ 2>/dev/null || true
-    cp -f /config/.config/xfce4/xfconf/xfce-perchannel-xml/xfwm4.xml /defaults/xfce/ 2>/dev/null || true
-    cp -f /config/.config/xfce4/xfconf/xfce-perchannel-xml/xsettings.xml /defaults/xfce/ 2>/dev/null || true
+# 5. Forçar /defaults a usar os padrões Windows 11 (evita fallback do LinuxServer)
+mkdir -p /defaults/xfce 2>/dev/null || true
+if [ -d /config-template/.config/xfce4/xfconf/xfce-perchannel-xml ]; then
+    cp -af /config-template/.config/xfce4/xfconf/xfce-perchannel-xml/* /defaults/xfce/ 2>/dev/null || true
 fi
 if [ -f /config/nginx-default.conf ]; then
     cp -f /config/nginx-default.conf /defaults/default.conf 2>/dev/null || true
 fi
 
-# 4. Ajustar permissões
+# 6. Autostart global de inicialização da sessão do Windows 11
+mkdir -p /etc/xdg/autostart 2>/dev/null || true
+if [ -f /config-template/.config/autostart/win11-session-init.desktop ]; then
+    cp -f /config-template/.config/autostart/win11-session-init.desktop /etc/xdg/autostart/ 2>/dev/null || true
+fi
+if [ -f /config-template/win11-session-init.sh ]; then
+    cp -f /config-template/win11-session-init.sh /usr/local/bin/win11-session-init
+    chmod +x /usr/local/bin/win11-session-init
+fi
+
+# 7. Ajustar permissões
 chown -R abc:abc /config/.themes /config/.icons /config/.config /config/Desktop /config/wallpapers /config/login_assets 2>/dev/null || true
 chmod +x /config/*.sh /config/*.py /config/webtop-lock 2>/dev/null || true
 chmod +x /config/Desktop/*.desktop 2>/dev/null || true

@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=Windows 11 Session Initializer
+Comment=Enforces Windows 11 wallpaper, icons cache, and panel layout on login
+Exec=/bin/bash -c "if [ -x /usr/local/bin/win11-session-init ]; then /usr/local/bin/win11-session-init; elif [ -x /config/win11-session-init.sh ]; then /config/win11-session-init.sh; fi"
+Terminal=false
+StartupNotify=false
+OnlyShowIn=XFCE;

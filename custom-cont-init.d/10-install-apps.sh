@@ -1,23 +1,25 @@
 #!/bin/bash
-# 10-install-apps.sh: Instalação de pacotes e plugins da interface Windows 11
+# 10-install-apps.sh: Aplicativos complementares e integrações da interface Windows 11
 
-if ! dpkg -s xfce4-docklike-plugin >/dev/null 2>&1; then
-    echo '[custom-init] Instalando VS Code, Whisker Menu, Docklike, Genmon e dependências...'
-    mkdir -p /etc/apt/keyrings
-    curl -sSL https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor -o /etc/apt/keyrings/packages.microsoft.gpg 2>/dev/null || true
-    echo 'deb [arch=amd64,arm64,armhf signed-by=/etc/apt/keyrings/packages.microsoft.gpg] https://packages.microsoft.com/repos/code stable main' > /etc/apt/sources.list.d/vscode.list
-    apt-get update
-    apt-get install -y --no-install-recommends xfce4-whiskermenu-plugin xfce4-docklike-plugin xfce4-genmon-plugin librsvg2-common scrot python3-cairo python3-gi-cairo xclip zenity code 2>/dev/null || \
-    apt-get install -y xfce4-whiskermenu-plugin xfce4-docklike-plugin xfce4-genmon-plugin librsvg2-common scrot python3-cairo python3-gi-cairo xclip zenity
-    echo '[custom-init] Pacotes instalados com sucesso.'
+# Instalação do VS Code em segundo plano (não trava a inicialização do desktop)
+if ! command -v code >/dev/null 2>&1; then
+    (
+        echo '[custom-init] Baixando VS Code em segundo plano...'
+        mkdir -p /etc/apt/keyrings
+        curl -sSL https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor -o /etc/apt/keyrings/packages.microsoft.gpg 2>/dev/null || true
+        echo 'deb [arch=amd64,arm64,armhf signed-by=/etc/apt/keyrings/packages.microsoft.gpg] https://packages.microsoft.com/repos/code stable main' > /etc/apt/sources.list.d/vscode.list
+        export DEBIAN_FRONTEND=noninteractive
+        apt-get update -qq && apt-get install -y -qq --no-install-recommends code 2>/dev/null || true
+        echo '[custom-init] VS Code instalado com sucesso.'
+    ) &
 fi
 
 # Instalação da Microsoft Store (win-store)
 if [ -f /config/win-store.py ]; then
-    cp /config/win-store.py /usr/local/bin/win-store
+    cp -f /config/win-store.py /usr/local/bin/win-store
     chmod +x /usr/local/bin/win-store
 elif [ -f /config-template/win-store.py ]; then
-    cp /config-template/win-store.py /usr/local/bin/win-store
+    cp -f /config-template/win-store.py /usr/local/bin/win-store
     chmod +x /usr/local/bin/win-store
 fi
 
@@ -29,7 +31,7 @@ Name=Microsoft Store
 GenericName=Loja de Aplicativos
 Comment=Instalar e Desinstalar Aplicativos e Pacotes
 Exec=/usr/local/bin/win-store
-Icon=/config/store-64.png
+Icon=win-store
 Path=/config
 Terminal=false
 StartupNotify=true
