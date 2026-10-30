@@ -1,0 +1,12 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=OpenCode
+GenericName=AI Coding Assistant
+Comment=Open source AI coding agent and editor
+Exec=/usr/local/bin/opencode-desktop %U
+Icon=ai.opencode
+Terminal=false
+StartupNotify=true
+Categories=Development;IDE;
+StartupWMClass=ai.opencode.desktop

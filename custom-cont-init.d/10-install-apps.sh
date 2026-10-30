@@ -39,7 +39,63 @@ if ! command -v code >/dev/null 2>&1; then
     apt-get install -y -qq --no-install-recommends code 2>/dev/null || true
 fi
 
-# 3. Instalação da Microsoft Store (win-store)
+# 3. OpenCode (IA Coding Assistant Desktop)
+if ! command -v opencode >/dev/null 2>&1 && [ ! -d /opt/OpenCode ]; then
+    (
+        echo '[apps-init] Instalando OpenCode Desktop...'
+        if [ -f /DATA/vps/OpenCode/opencode.deb ]; then
+            dpkg -i /DATA/vps/OpenCode/opencode.deb >/dev/null 2>&1 || apt-get install -y -f >/dev/null 2>&1 || true
+        else
+            mkdir -p /tmp
+            curl -sSL "https://github.com/anomalyco/opencode/releases/download/v2.2.3/opencode-desktop-linux-amd64.deb" -o /tmp/opencode.deb 2>/dev/null || true
+            if [ -f /tmp/opencode.deb ]; then
+                dpkg -i /tmp/opencode.deb >/dev/null 2>&1 || apt-get install -y -f >/dev/null 2>&1 || true
+                rm -f /tmp/opencode.deb 2>/dev/null || true
+            fi
+        fi
+        echo '[apps-init] OpenCode Desktop instalado com sucesso.'
+    ) &
+fi
+
+# Wrapper opencode-desktop com flags de compatibilidade Docker
+cat << 'EOF' > /usr/local/bin/opencode-desktop
+#!/bin/bash
+if [ -x /opt/OpenCode/ai.opencode ]; then
+    exec /opt/OpenCode/ai.opencode --no-sandbox "$@"
+elif [ -x /config/.local/bin/opencode ]; then
+    exec /config/.local/bin/opencode "$@"
+elif command -v opencode >/dev/null 2>&1; then
+    exec opencode "$@"
+else
+    zenity --error --text="OpenCode não encontrado ou ainda está sendo instalado." 2>/dev/null || true
+fi
+EOF
+chmod +x /usr/local/bin/opencode-desktop
+
+# Ícone e atalho no menu para OpenCode
+mkdir -p /usr/share/icons/hicolor/64x64/apps 2>/dev/null || true
+if [ -f /config-template/opencode-64.png ]; then
+    cp -f /config-template/opencode-64.png /usr/share/icons/hicolor/64x64/apps/ai.opencode.png 2>/dev/null || true
+    gtk-update-icon-cache -f -t /usr/share/icons/hicolor 2>/dev/null || true
+fi
+
+cat << 'EOF' > /usr/share/applications/ai.opencode.desktop.desktop
+[Desktop Entry]
+Name=OpenCode
+GenericName=AI Coding Assistant
+Comment=Open source AI coding agent and editor
+Exec=/usr/local/bin/opencode-desktop %U
+Terminal=false
+Type=Application
+Icon=ai.opencode
+StartupWMClass=ai.opencode.desktop
+MimeType=x-scheme-handler/opencode;
+Categories=Development;IDE;
+EOF
+chmod +x /usr/share/applications/ai.opencode.desktop.desktop
+ln -sf /usr/share/applications/ai.opencode.desktop.desktop /usr/share/applications/opencode.desktop 2>/dev/null || true
+
+# 4. Instalação da Microsoft Store (win-store)
 if [ -f /config/win-store.py ]; then
     cp -f /config/win-store.py /usr/local/bin/win-store
     chmod +x /usr/local/bin/win-store
@@ -104,12 +160,17 @@ EOF
     chmod +x /usr/local/bin/agy
 fi
 
-# Limpeza de atalhos indesejados (Chromium) da área de trabalho
+# Sincronização de atalhos da área de trabalho e remoção de resíduos do Chromium
 if [ -d /config/Desktop ]; then
     rm -f /config/Desktop/chromium*.desktop /config/Desktop/*chromium*.desktop 2>/dev/null || true
     if [ -f /usr/share/applications/google-chrome.desktop ] && [ ! -f "/config/Desktop/Google Chrome.desktop" ]; then
         cp -f /usr/share/applications/google-chrome.desktop "/config/Desktop/Google Chrome.desktop" 2>/dev/null || true
         chmod +x "/config/Desktop/Google Chrome.desktop" 2>/dev/null || true
         chown abc:abc "/config/Desktop/Google Chrome.desktop" 2>/dev/null || true
+    fi
+    if [ -f /config-template/Desktop/OpenCode.desktop ] && [ ! -f "/config/Desktop/OpenCode.desktop" ]; then
+        cp -f /config-template/Desktop/OpenCode.desktop "/config/Desktop/OpenCode.desktop" 2>/dev/null || true
+        chmod +x "/config/Desktop/OpenCode.desktop" 2>/dev/null || true
+        chown abc:abc "/config/Desktop/OpenCode.desktop" 2>/dev/null || true
     fi
 fi
