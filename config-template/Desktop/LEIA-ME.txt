@@ -1,0 +1,75 @@
+================================================================================
+           BEM-VINDO AO WEBTOP WINDOWS 11 CLOUD VPS EDITION
+================================================================================
+
+Este sistema é um ambiente desktop completo estilo Windows 11 rodando dentro do
+Docker, otimizado para servidores VPS e computação em nuvem com alta performance
+e máxima segurança.
+
+--------------------------------------------------------------------------------
+1. O QUE É O DIRETÓRIO /DATA (DISCO D:)?
+--------------------------------------------------------------------------------
+O diretório /DATA (ou o atalho "Disco Local (D:)" na sua área de trabalho) é o
+volume de armazenamento persistente dedicado da sua máquina.
+
+* O QUE SIGNIFICA:
+  Tudo o que você salvar dentro de /DATA ou do Disco D: fica permanentemente
+  salvo no seu servidor. Mesmo que o contêiner seja parado, atualizado ou
+  recriado, seus arquivos, códigos, bases de dados e downloads JAMAIS serão
+  perdidos.
+
+* MAPEAMENTO NO WINE (WINDOWS):
+  Ao executar instaladores e programas do Windows (.exe/.msi), o Wine reconhece
+  o diretório /DATA automaticamente como a unidade D: (D:\).
+  Recomenda-se instalar programas pesados, bots e projetos sempre no Disco D:.
+
+--------------------------------------------------------------------------------
+2. APLICATIVOS PRÉ-CONFIGURADOS
+--------------------------------------------------------------------------------
+* GOOGLE CHROME:
+  Navegador oficial do Google pré-configurado com aceleração gráfica e proteção
+  para contêineres. Já é o navegador padrão do sistema.
+
+* SUBSISTEMA WINE (PROGRAMAS WINDOWS):
+  Permite executar arquivos executáveis do Windows (.exe, .msi, .bat, .reg) com
+  apenas 2 cliques pelo Gerenciador de Arquivos (Este Computador).
+  Compatível com instaladores do MetaTrader 5, bots e softwares de automação.
+
+* OPENCODE (IA CODING ASSISTANT):
+  Ambiente desktop avançado de inteligência artificial para programação e
+  automação, pronto para uso sem configurações burocráticas de autenticação.
+
+* VISUAL STUDIO CODE:
+  Editor de código profissional com suporte a extensões e terminal integrado.
+
+* MICROSOFT STORE:
+  Gerenciador visual de aplicativos e pacotes para instalar novas ferramentas
+  com apenas um clique.
+
+* GERENCIADOR DE TAREFAS:
+  Monitor em tempo real de uso de CPU, memória RAM, rede e encerramento de
+  processos do sistema.
+
+* CONFIGURAÇÕES DA CONTA:
+  Altere seu nome de exibição, senha de acesso e tempo de bloqueio automático
+  da tela diretamente pela interface gráfica.
+
+--------------------------------------------------------------------------------
+3. ACESSO E SEGURANÇA REFORÇADA
+--------------------------------------------------------------------------------
+* ACESSO DIRETO:
+  Por padrão, o sistema responde nas portas padrão 80 (HTTP) e 443 (HTTPS).
+  Basta digitar o endereço IP da sua VPS no navegador de qualquer computador ou
+  celular para acessar seu desktop.
+
+* PROTEÇÃO ATIVA:
+  - Proteção contra força bruta: Bloqueio automático por IP após 5 tentativas
+    incorretas de senha.
+  - Criptografia SHA-512 crypt para armazenamento de senhas.
+  - Sessões seguras assinadas via tokens HMAC revogáveis no logout.
+  - Contêiner seguro sem modo 'privileged: true' para impedir ataques de
+    container escape ao sistema hospedeiro.
+
+================================================================================
+  Desenvolvido com carinho para máxima produtividade na nuvem. Bom trabalho!
+================================================================================

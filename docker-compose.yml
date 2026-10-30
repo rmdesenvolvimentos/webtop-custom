@@ -35,6 +35,7 @@ services:
       - "${PORT_HTTPS:-443}:3001"
     volumes:
       - ./data/config:/config
+      - ${DATA_PATH:-./data/storage}:/DATA
       - ./custom-cont-init.d:/custom-cont-init.d:ro
       - ./config-template:/config-template:ro
     shm_size: 4gb

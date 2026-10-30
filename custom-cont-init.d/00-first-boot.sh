@@ -91,10 +91,20 @@ if [ -f /config-template/win11-session-init.sh ]; then
     chmod +x /usr/local/bin/win11-session-init
 fi
 
-# 7. Ajustar permissões
+# 7. Garantir diretório /DATA (Disco D:) e permissões
+mkdir -p /DATA 2>/dev/null || true
+chown -R abc:abc /DATA 2>/dev/null || true
+chmod 775 /DATA 2>/dev/null || true
+if [ ! -f /DATA/LEIA-ME.txt ] && [ -f /config-template/Desktop/LEIA-ME.txt ]; then
+    cp -f /config-template/Desktop/LEIA-ME.txt /DATA/LEIA-ME.txt 2>/dev/null || true
+    chown abc:abc /DATA/LEIA-ME.txt 2>/dev/null || true
+fi
+
+# 8. Ajustar permissões
 chown -R abc:abc /config/.themes /config/.icons /config/.config /config/Desktop /config/wallpapers /config/login_assets 2>/dev/null || true
 chmod +x /config/*.sh /config/*.py /config/webtop-lock 2>/dev/null || true
 chmod +x /config/Desktop/*.desktop 2>/dev/null || true
+chmod 644 /config/Desktop/*.txt 2>/dev/null || true
 chmod 600 /config/.auth_secret 2>/dev/null || true
 
 echo "[first-boot] Personalização do Windows 11 aplicada com sucesso!"

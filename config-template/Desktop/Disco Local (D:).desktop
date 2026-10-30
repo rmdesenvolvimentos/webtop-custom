@@ -1,0 +1,11 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Disco Local (D:)
+GenericName=Armazenamento Persistente
+Comment=Armazenamento de Dados Persistente (/DATA)
+Exec=thunar /DATA
+Icon=drive-harddisk
+Terminal=false
+StartupNotify=true
+Categories=FileManager;System;
