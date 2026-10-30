@@ -59,9 +59,27 @@ if ! command -v certbot >/dev/null 2>&1; then
   apt-get install -yqq certbot
 fi
 
-# ─── 3. Parar containers para liberar porta 80 (certbot standalone) ──────────
+# ─── 3. Parar containers e liberar porta 80 ──────────────────────────────────
 info "Parando containers Docker para liberar a porta 80..."
 docker_compose down 2>/dev/null || true
+
+# Garante que NENHUM processo esteja usando a porta 80 (nginx, apache, etc.)
+info "Verificando se a porta 80 está livre..."
+if command -v fuser >/dev/null 2>&1; then
+  fuser -k 80/tcp 2>/dev/null || true
+  sleep 1
+fi
+# Fallback: usa ss/lsof para encontrar e matar o processo
+if ss -tlnp 2>/dev/null | grep -q ':80 '; then
+  warn "Processo ainda na porta 80 – tentando forçar encerramento..."
+  PID_80=$(ss -tlnp | grep ':80 ' | grep -oP 'pid=\K[0-9]+' | head -1)
+  [ -n "$PID_80" ] && kill -9 "$PID_80" 2>/dev/null || true
+  sleep 1
+fi
+# Para serviços comuns que possam estar na porta 80
+systemctl stop nginx apache2 httpd 2>/dev/null || true
+sleep 1
+info "Porta 80 liberada."
 
 # ─── 4. Emitir certificado Let's Encrypt ─────────────────────────────────────
 CERT_LIVE="/etc/letsencrypt/live/${DOMAIN}"
