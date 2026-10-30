@@ -86,7 +86,7 @@ O script faz **automaticamente**:
 Resultado final:
 ```
 ✅  Desktop instalado com sucesso e 100% seguro!
-🔒  Acesse agora: https://185.211.5.246.sslip.io
+🔒  Acesse agora: https://123.456.7.890.sslip.io
 ```
 
 ---
