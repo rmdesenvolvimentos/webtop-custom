@@ -133,6 +133,7 @@ if [ -f /config/.config/xfce4/panel/docklike-2.rc ]; then
 fi
 
 # 10. Ajustar permissões gerais
+chown abc:abc /config 2>/dev/null || true
 chown -R abc:abc /config/.themes /config/.icons /config/.config /config/.local /config/Desktop /config/wallpapers /config/login_assets 2>/dev/null || true
 chmod +x /config/*.sh /config/*.py /config/webtop-lock 2>/dev/null || true
 chmod +x /config/Desktop/*.desktop 2>/dev/null || true

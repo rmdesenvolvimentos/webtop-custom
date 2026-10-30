@@ -214,6 +214,11 @@ fi
 info "DOMAIN=${DOMAIN} gravado em .env ✓" "DOMAIN=${DOMAIN} saved to .env ✓"
 
 # ─── 9. Subir o Docker stack ─────────────────────────────────────────────────
+# Pré-criar pastas de dados com permissão para o usuário interno (UID/GID 1000)
+info "Preparando diretórios de dados e permissões..." "Preparing data directories and permissions..."
+mkdir -p "$REPO_DIR/data/config" "$REPO_DIR/data/storage"
+chown -R 1000:1000 "$REPO_DIR/data" 2>/dev/null || true
+
 info "Subindo o Docker stack..." "Starting Docker stack..."
 docker_compose up -d
 
