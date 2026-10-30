@@ -3,13 +3,14 @@ services:
     image: lscr.io/linuxserver/webtop:ubuntu-xfce
     container_name: webtop
     hostname: ${HOSTNAME:-cloud-vps}
-    # Modo seguro padrao (sem privileged: true para evitar container escape).
-    # Descomente apenas se voce precisar rodar Docker-in-Docker dentro do container.
+    # Modo seguro (sem privileged: true para evitar container escape).
     # privileged: true
     security_opt:
       - seccomp:unconfined
+      - apparmor:unconfined
     cap_add:
-      - SYS_PTRACE # Suporte a depuracao e otimizacao do Wine
+      - SYS_PTRACE
+      - SYS_ADMIN
     environment:
       - PUID=${PUID:-1000}
       - PGID=${PGID:-1000}
