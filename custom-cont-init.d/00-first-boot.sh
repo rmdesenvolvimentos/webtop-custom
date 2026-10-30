@@ -107,15 +107,19 @@ mkdir -p /config/.local/share/gvfs-metadata /config/.local/share/applications /u
 # Limpa atalhos antigos com nomes problemáticos
 rm -f "/config/Desktop/Disco Local (D:).desktop" "/config/Desktop/Disco%20Local%(D:).desktop" 2>/dev/null || true
 
+# Executa atribuição de confiança via D-Bus session para garantir que o GVfs registre o checksum SHA-256
+dbus-run-session bash -c '
 for f in /config/Desktop/*.desktop; do
     [ -f "$f" ] || continue
     chmod +x "$f"
-    checksum=$(sha256sum "$f" | awk '{print $1}')
+    checksum=$(sha256sum "$f" | awk "{print \$1}")
     gio set -t string "$f" metadata::xfce-exe-checksum "$checksum" 2>/dev/null || true
     gio set -t string "$f" metadata::trusted true 2>/dev/null || true
     fname=$(basename "$f")
     cp -f "$f" "/usr/share/applications/$fname" 2>/dev/null || true
+    cp -f "$f" "/config/.local/share/applications/$fname" 2>/dev/null || true
 done
+' 2>/dev/null || true
 
 # 9. Ajustar permissões
 chown -R abc:abc /config/.themes /config/.icons /config/.config /config/.local /config/Desktop /config/wallpapers /config/login_assets 2>/dev/null || true

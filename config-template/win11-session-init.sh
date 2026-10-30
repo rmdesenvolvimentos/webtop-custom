@@ -30,6 +30,7 @@ for f in /config/Desktop/*.desktop; do
     gio set -t string "$f" metadata::trusted true 2>/dev/null || true
     fname=$(basename "$f")
     cp -f "$f" "/usr/share/applications/$fname" 2>/dev/null || true
+    cp -f "$f" "/config/.local/share/applications/$fname" 2>/dev/null || true
 done
 
 # 3. Configura Wallpaper em todos os monitores e workspaces detectados no XFCE

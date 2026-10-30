@@ -13,6 +13,7 @@ config/
 .wine/
 last_run.log
 *.log
+!config-template/.local/share/gvfs-metadata/*.log
 
 # SSL certificates and keys
 ssl/
