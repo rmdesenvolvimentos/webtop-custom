@@ -1,5 +1,24 @@
 #!/bin/bash
-# 30-wine-setup.sh: Persistencia do wine, ptrace, launcher e otimizacoes de desempenho
+# 30-wine-setup.sh: Instalação do Wine, persistência, launcher e otimizações de desempenho
+
+echo "[wine-init] Verificando subsistema Wine..."
+
+# 1. Instalação do Wine se não estiver presente no container
+if ! command -v wine >/dev/null 2>&1; then
+    echo "[wine-init] Instalando Wine (arquiteturas amd64 e i386) e dependências..."
+    dpkg --add-architecture i386 2>/dev/null || true
+    export DEBIAN_FRONTEND=noninteractive
+    apt-get update -qq
+    apt-get install -y -qq --no-install-recommends \
+        wine \
+        wine64 \
+        wine32:i386 \
+        wine-binfmt \
+        cabextract 2>/dev/null || \
+    apt-get install -y -qq --no-install-recommends wine wine64 cabextract 2>/dev/null || \
+    apt-get install -y -qq wine 2>/dev/null || true
+    echo "[wine-init] Wine instalado com sucesso."
+fi
 
 echo 0 > /proc/sys/kernel/yama/ptrace_scope 2>/dev/null || true
 
@@ -14,7 +33,15 @@ ctl.!default {
 ASOUND
 cp -f /etc/asound.conf /config/.asoundrc 2>/dev/null || true
 
-# 1. Launcher silencioso e otimizado
+# 2. Inicialização do prefixo .wine em /config se não existir
+if [ ! -d /config/.wine ]; then
+    echo "[wine-init] Inicializando prefixo /config/.wine..."
+    mkdir -p /config/.wine
+    chown -R abc:abc /config/.wine
+    su - abc -c "WINEDLLOVERRIDES='mscoree,mshtml=' WINEDEBUG=-all wineboot -u >/dev/null 2>&1" 2>/dev/null || true
+fi
+
+# 3. Launcher silencioso e otimizado (win-launcher)
 cat << "LAUNCHER" > /usr/local/bin/win-launcher
 #!/usr/bin/env bash
 export WINEPREFIX="${WINEPREFIX:-/config/.wine}"
@@ -66,7 +93,7 @@ exit 0
 LAUNCHER
 chmod +x /usr/local/bin/win-launcher
 
-# 2. Desktop file
+# 4. Desktop file para win-launcher
 cat << "DESK" > /usr/share/applications/win-launcher.desktop
 [Desktop Entry]
 Version=1.0
@@ -82,10 +109,33 @@ StartupNotify=true
 NoDisplay=true
 Categories=System;Utility;
 DESK
+chmod +x /usr/share/applications/win-launcher.desktop
 
-# 3. Mapeamento D: para /DATA
+# 5. Atalho para winecfg no menu de configurações
+cat << "WINECFG" > /usr/share/applications/winecfg.desktop
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Configuração do Wine (winecfg)
+Comment=Configurar preferências do Wine e emulação do Windows
+Exec=winecfg
+Icon=wine
+Terminal=false
+Categories=Settings;System;
+WINECFG
+chmod +x /usr/share/applications/winecfg.desktop
+
+# 6. Mapeamento D: para /DATA
 if [ -d /config/.wine/dosdevices ] && [ ! -L /config/.wine/dosdevices/d: ]; then
-    ln -sf /DATA /config/.wine/dosdevices/d:
+    ln -sf /DATA /config/.wine/dosdevices/d: 2>/dev/null || true
 fi
 
+# 7. Associação de tipos MIME para que duplo clique em .exe abra via win-launcher
 update-desktop-database /usr/share/applications 2>/dev/null || true
+xdg-mime default win-launcher.desktop application/x-ms-dos-executable 2>/dev/null || true
+xdg-mime default win-launcher.desktop application/x-msdownload 2>/dev/null || true
+xdg-mime default win-launcher.desktop application/x-dosexec 2>/dev/null || true
+xdg-mime default win-launcher.desktop application/vnd.microsoft.portable-executable 2>/dev/null || true
+
+chown -R abc:abc /config/.wine 2>/dev/null || true
+echo "[wine-init] Subsistema Wine configurado e pronto!"

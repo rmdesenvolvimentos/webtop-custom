@@ -52,9 +52,11 @@
       <property name="command-profile" type="string" value=""/>
       <property name="show-command-profile" type="bool" value="false"/>
       <property name="favorites" type="array">
+        <value type="string" value="google-chrome.desktop"/>
         <value type="string" value="thunar.desktop"/>
         <value type="string" value="xfce4-terminal-emulator.desktop"/>
-        <value type="string" value="synaptic.desktop"/>
+        <value type="string" value="win-store.desktop"/>
+        <value type="string" value="code.desktop"/>
       </property>
       <property name="recent" type="array">
         <value type="string" value="xfce4-terminal.desktop"/>
