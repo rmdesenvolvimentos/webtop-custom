@@ -139,4 +139,57 @@ chmod +x /config/Desktop/*.desktop 2>/dev/null || true
 chmod 644 /config/Desktop/*.txt 2>/dev/null || true
 chmod 600 /config/.auth_secret 2>/dev/null || true
 
+# 11. SSL automático via sslip.io + Let's Encrypt (Opção Zero-Touch)
+# Só executa se /config/ssl/cert.pem ainda não existir (ou estiver vazio).
+# Se o usuário rodou setup.sh no host, os certs já estarão presentes e este bloco é pulado.
+if [ ! -s /config/ssl/cert.pem ]; then
+    echo "[first-boot] Certificado SSL não encontrado – iniciando emissão automática via Let's Encrypt..."
+    export DEBIAN_FRONTEND=noninteractive
+    if ! command -v certbot >/dev/null 2>&1; then
+        apt-get update -qq
+        apt-get install -y -qq --no-install-recommends certbot
+    fi
+
+    VPS_IP=$(curl -fsSL https://api.ipify.org 2>/dev/null \
+          || curl -fsSL https://ifconfig.me 2>/dev/null \
+          || curl -fsSL https://icanhazip.com 2>/dev/null \
+          || true)
+
+    if [ -n "$VPS_IP" ]; then
+        DOMAIN="${VPS_IP}.sslip.io"
+        echo "[first-boot] IP detectado: $VPS_IP  →  Domínio: $DOMAIN"
+
+        CERT_LIVE="/etc/letsencrypt/live/${DOMAIN}"
+        if [ ! -d "$CERT_LIVE" ]; then
+            # Para o nginx momentaneamente para liberar a porta 80
+            nginx -s stop 2>/dev/null || true
+            sleep 1
+
+            certbot certonly \
+                --standalone \
+                -d "$DOMAIN" \
+                --non-interactive \
+                --agree-tos \
+                --register-unsafely-without-email 2>&1 | tee -a /config/ssl-setup.log || true
+
+            # Reinicia o nginx (o supervisor vai fazê-lo de qualquer jeito)
+            nginx 2>/dev/null || true
+        fi
+
+        if [ -d "$CERT_LIVE" ]; then
+            mkdir -p /config/ssl
+            cp -f "$CERT_LIVE/fullchain.pem" /config/ssl/cert.pem
+            cp -f "$CERT_LIVE/privkey.pem"   /config/ssl/cert.key
+            chmod 644 /config/ssl/cert.pem
+            chmod 600 /config/ssl/cert.key
+            echo "[first-boot] ✅ Certificado SSL aplicado para https://${DOMAIN}"
+            echo "DOMAIN=${DOMAIN}" > /config/ssl/.domain
+        else
+            echo "[first-boot] ⚠️  Certbot não emitiu o certificado. Verifique /config/ssl-setup.log"
+        fi
+    else
+        echo "[first-boot] ⚠️  Não foi possível detectar o IP público – SSL não configurado automaticamente."
+    fi
+fi
+
 echo "[first-boot] Personalização do Windows 11 aplicada com sucesso!"

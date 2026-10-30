@@ -38,5 +38,6 @@ services:
       - ${DATA_PATH:-./data/storage}:/DATA
       - ./custom-cont-init.d:/custom-cont-init.d:ro
       - ./config-template:/config-template:ro
+      - ./config-template/ssl:/config/ssl:ro
     shm_size: 4gb
     restart: unless-stopped

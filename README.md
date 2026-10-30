@@ -66,6 +66,47 @@ Uma versão customizada, leve e elegante do **Webtop** (Ubuntu XFCE) da [LinuxSe
 
 ## 🛠️ Como Iniciar
 
+### ⚡ Opção 1 – Setup automático com SSL (RECOMENDADO)
+
+> Roda em qualquer VPS limpa. Detecta o IP, gera o certificado **Let's Encrypt oficial** e sobe tudo em ~20 segundos.
+
+```bash
+git clone https://github.com/rmdesenvolvimentos/webtop-custom.git
+cd webtop-custom
+chmod +x setup.sh && sudo ./setup.sh
+```
+
+O script faz **automaticamente**:
+1. 🔍 Detecta o IP público da VPS
+2. 🌐 Forma o domínio `<SEU_IP>.sslip.io` (sem precisar de domínio próprio)
+3. 🔒 Emite certificado **Let's Encrypt** real (cadeado verde no navegador)
+4. 🐳 Sobe o container Docker com HTTPS já configurado
+5. 🎉 Imprime a URL final de acesso
+
+Resultado final:
+```
+✅  Desktop instalado com sucesso e 100% seguro!
+🔒  Acesse agora: https://185.211.5.246.sslip.io
+```
+
+---
+
+### 🐳 Opção 2 – Zero-Touch (só `docker compose up -d`)
+
+Se preferir não rodar o `setup.sh`, o próprio container detecta o IP e gera o certificado SSL no primeiro boot automaticamente:
+
+```bash
+git clone https://github.com/rmdesenvolvimentos/webtop-custom.git
+cd webtop-custom
+docker compose up -d
+```
+
+> **Nota:** A porta 80 precisa estar livre no momento do boot para a validação do Let's Encrypt.
+
+---
+
+### ⚙️ Opção 3 – Configuração manual
+
 ### 1. Clonar o repositório
 ```bash
 git clone https://github.com/rmdesenvolvimentos/webtop-custom.git
@@ -111,6 +152,7 @@ O container irá baixar a imagem base e, no primeiro boot, aplicar todas as conf
 ## 🌐 Como Acessar
 
 Abra o seu navegador web e acesse:
+- **Com SSL (setup.sh):** `https://<SEU_IP>.sslip.io` — cadeado verde ativo ✅
 - **HTTP:** `http://IP-DA-SUA-VPS` (ou `http://localhost` se estiver rodando localmente)
 - **HTTPS:** `https://IP-DA-SUA-VPS` (ou `https://localhost`)
 
