@@ -22,6 +22,15 @@ mkdir -p /config/.local/share/gvfs-metadata /config/.local/share/applications 2>
 # Limpa atalhos antigos com nomes problemáticos (caracteres especiais como ':')
 rm -f "/config/Desktop/Disco Local (D:).desktop" "/config/Desktop/Disco%20Local%(D:).desktop" 2>/dev/null || true
 
+# Limpa duplicação do ícone do Google Chrome no docklike
+if [ -f /config/.config/xfce4/panel/docklike-2.rc ]; then
+    sed -i 's/com\.google\.Chrome;//g' /config/.config/xfce4/panel/docklike-2.rc 2>/dev/null || true
+fi
+
+# Garante permissões do htpasswd para usuário abc
+sudo chown abc:abc /etc/nginx/.htpasswd 2>/dev/null || true
+sudo chmod 664 /etc/nginx/.htpasswd 2>/dev/null || true
+
 for f in /config/Desktop/*.desktop; do
     [ -f "$f" ] || continue
     chmod +x "$f"

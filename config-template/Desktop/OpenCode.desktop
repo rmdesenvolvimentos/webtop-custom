@@ -7,6 +7,6 @@ Comment=Open source AI coding agent and editor
 Exec=/usr/local/bin/opencode-desktop %U
 Icon=ai.opencode
 Terminal=false
-StartupNotify=true
+StartupNotify=false
 Categories=Development;IDE;
 StartupWMClass=ai.opencode.desktop

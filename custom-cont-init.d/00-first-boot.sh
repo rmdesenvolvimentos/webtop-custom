@@ -121,7 +121,18 @@ for f in /config/Desktop/*.desktop; do
 done
 ' 2>/dev/null || true
 
-# 9. Ajustar permissões
+# 9. Garantir permissões do .htpasswd e autenticação para o usuário abc
+mkdir -p /etc/nginx 2>/dev/null || true
+touch /etc/nginx/.htpasswd 2>/dev/null || true
+chown abc:abc /etc/nginx/.htpasswd 2>/dev/null || true
+chmod 664 /etc/nginx/.htpasswd 2>/dev/null || true
+
+# Limpa duplicação do ícone do Google Chrome no docklike
+if [ -f /config/.config/xfce4/panel/docklike-2.rc ]; then
+    sed -i 's/com\.google\.Chrome;//g' /config/.config/xfce4/panel/docklike-2.rc 2>/dev/null || true
+fi
+
+# 10. Ajustar permissões gerais
 chown -R abc:abc /config/.themes /config/.icons /config/.config /config/.local /config/Desktop /config/wallpapers /config/login_assets 2>/dev/null || true
 chmod +x /config/*.sh /config/*.py /config/webtop-lock 2>/dev/null || true
 chmod +x /config/Desktop/*.desktop 2>/dev/null || true

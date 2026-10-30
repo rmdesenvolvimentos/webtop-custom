@@ -24,7 +24,7 @@ EOF
 if command -v google-chrome-stable >/dev/null 2>&1; then
     update-alternatives --set x-www-browser /usr/bin/google-chrome-stable 2>/dev/null || true
     update-alternatives --set gnome-www-browser /usr/bin/google-chrome-stable 2>/dev/null || true
-    ln -sf /usr/share/applications/google-chrome.desktop /usr/share/applications/com.google.Chrome.desktop 2>/dev/null || true
+    rm -f /usr/share/applications/com.google.Chrome.desktop 2>/dev/null || true
     xdg-settings set default-web-browser google-chrome.desktop 2>/dev/null || true
 fi
 
@@ -40,34 +40,87 @@ if ! command -v code >/dev/null 2>&1; then
 fi
 
 # 3. OpenCode (IA Coding Assistant Desktop)
-if ! command -v opencode >/dev/null 2>&1 && [ ! -d /opt/OpenCode ]; then
-    (
-        echo '[apps-init] Instalando OpenCode Desktop...'
-        if [ -f /DATA/vps/OpenCode/opencode.deb ]; then
-            dpkg -i /DATA/vps/OpenCode/opencode.deb >/dev/null 2>&1 || apt-get install -y -f >/dev/null 2>&1 || true
-        else
-            mkdir -p /tmp
-            curl -sSL "https://github.com/anomalyco/opencode/releases/download/v2.2.3/opencode-desktop-linux-amd64.deb" -o /tmp/opencode.deb 2>/dev/null || true
-            if [ -f /tmp/opencode.deb ]; then
-                dpkg -i /tmp/opencode.deb >/dev/null 2>&1 || apt-get install -y -f >/dev/null 2>&1 || true
-                rm -f /tmp/opencode.deb 2>/dev/null || true
-            fi
-        fi
-        echo '[apps-init] OpenCode Desktop instalado com sucesso.'
-    ) &
+install_opencode() {
+    echo '[apps-init] Instalando dependências e OpenCode Desktop...'
+    export DEBIAN_FRONTEND=noninteractive
+    apt-get update -qq
+    apt-get install -y -qq --no-install-recommends \
+        libnotify4 \
+        libnss3 \
+        libxss1 \
+        libxtst6 \
+        xdg-utils \
+        libuuid1 \
+        libsecret-1-0 \
+        libgtk-3-0t64 \
+        libatspi2.0-0t64 \
+        zenity 2>/dev/null || true
+
+    local DEB=""
+    if [ -f /DATA/vps/OpenCode/opencode.deb ]; then
+        DEB="/DATA/vps/OpenCode/opencode.deb"
+    elif [ -f /mnt/host/DATA/vps/OpenCode/opencode.deb ]; then
+        DEB="/mnt/host/DATA/vps/OpenCode/opencode.deb"
+    else
+        mkdir -p /tmp
+        echo '[apps-init] Baixando OpenCode Desktop release...'
+        curl -sSL "https://github.com/anomalyco/opencode/releases/download/v2.2.3/opencode-desktop-linux-amd64.deb" -o /tmp/opencode.deb 2>/dev/null || true
+        [ -f /tmp/opencode.deb ] && DEB="/tmp/opencode.deb"
+    fi
+
+    if [ -n "$DEB" ] && [ -f "$DEB" ]; then
+        echo '[apps-init] Extraindo OpenCode Desktop para /opt/OpenCode...'
+        dpkg-deb -x "$DEB" / 2>/dev/null || dpkg -i --force-all "$DEB" 2>/dev/null || true
+        [ "$DEB" = "/tmp/opencode.deb" ] && rm -f /tmp/opencode.deb 2>/dev/null || true
+    fi
+
+    if [ -x /opt/OpenCode/resources/opencode-cli ]; then
+        ln -sf /opt/OpenCode/resources/opencode-cli /usr/local/bin/opencode 2>/dev/null || true
+    fi
+    echo '[apps-init] OpenCode Desktop pronto.'
+}
+
+if [ ! -x /opt/OpenCode/ai.opencode ] && [ ! -x /config/.local/bin/opencode ]; then
+    ( install_opencode ) >/var/log/opencode-install.log 2>&1 &
 fi
 
-# Wrapper opencode-desktop com flags de compatibilidade Docker
+# Wrapper opencode-desktop com flags de compatibilidade Docker e feedback visual
 cat << 'EOF' > /usr/local/bin/opencode-desktop
 #!/bin/bash
+# Wrapper inteligente para OpenCode Desktop
+
 if [ -x /opt/OpenCode/ai.opencode ]; then
     exec /opt/OpenCode/ai.opencode --no-sandbox "$@"
 elif [ -x /config/.local/bin/opencode ]; then
     exec /config/.local/bin/opencode "$@"
 elif command -v opencode >/dev/null 2>&1; then
     exec opencode "$@"
+fi
+
+# Se não estiver pronto, verifica o progresso do instalador em segundo plano com indicador visual
+(
+    echo "10"
+    echo "# Verificando status do OpenCode Desktop..."
+    for i in $(seq 1 45); do
+        if [ -x /opt/OpenCode/ai.opencode ]; then
+            echo "100"
+            echo "# OpenCode pronto! Abrindo aplicativo..."
+            sleep 1
+            exit 0
+        fi
+        pct=$(( 10 + (i * 90 / 45) ))
+        echo "$pct"
+        echo "# O OpenCode está concluindo o download/instalação... (${i}s)"
+        sleep 2
+    done
+) | zenity --progress --title="OpenCode AI" --text="Inicializando o OpenCode..." --percentage=10 --auto-close --no-cancel 2>/dev/null || true
+
+if [ -x /opt/OpenCode/ai.opencode ]; then
+    exec /opt/OpenCode/ai.opencode --no-sandbox "$@"
+elif [ -x /config/.local/bin/opencode ]; then
+    exec /config/.local/bin/opencode "$@"
 else
-    zenity --error --text="OpenCode não encontrado ou ainda está sendo instalado." 2>/dev/null || true
+    zenity --error --title="OpenCode" --text="O OpenCode ainda está sendo baixado em segundo plano. Por favor, aguarde cerca de 1 minuto e tente novamente." 2>/dev/null || true
 fi
 EOF
 chmod +x /usr/local/bin/opencode-desktop

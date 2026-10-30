@@ -218,6 +218,23 @@ def clear_failed_attempts(ip):
     if ip in FAILED_ATTEMPTS:
         del FAILED_ATTEMPTS[ip]
 
+def write_htpasswd(content_str):
+    try:
+        with open(HTPASSWD_PATH, "w") as f:
+            f.write(content_str)
+            return
+    except Exception:
+        pass
+    subprocess.run(["sudo", "chown", "abc:abc", HTPASSWD_PATH], check=False)
+    subprocess.run(["sudo", "chmod", "664", HTPASSWD_PATH], check=False)
+    try:
+        with open(HTPASSWD_PATH, "w") as f:
+            f.write(content_str)
+            return
+    except Exception:
+        p = subprocess.Popen(["sudo", "tee", HTPASSWD_PATH], stdin=subprocess.PIPE, stdout=subprocess.DEVNULL)
+        p.communicate(content_str.encode())
+
 def set_user_credentials(username, password, display_name=None):
     """Updates password using modern SHA-512 crypt ($6$) hashing."""
     disp = display_name.strip() if display_name else username
@@ -227,8 +244,7 @@ def set_user_credentials(username, password, display_name=None):
         # Use OpenSSL SHA-512 crypt (-6)
         res = subprocess.run(["openssl", "passwd", "-6", password], capture_output=True, text=True)
         hashed = res.stdout.strip()
-        with open(HTPASSWD_PATH, "w") as f:
-            f.write(f"{username}:{hashed}\n")
+        write_htpasswd(f"{username}:{hashed}\n")
         try:
             p = subprocess.Popen(["sudo", "chpasswd"], stdin=subprocess.PIPE)
             p.communicate(f"abc:{password}\n".encode())

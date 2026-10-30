@@ -13,6 +13,34 @@ from gi.repository import Gtk, Gdk, GLib
 PROFILE_PATH = "/config/user_profile.json"
 HTPASSWD_PATH = "/etc/nginx/.htpasswd"
 
+def read_htpasswd():
+    if not os.path.exists(HTPASSWD_PATH):
+        return []
+    try:
+        with open(HTPASSWD_PATH, "r") as f:
+            return f.readlines()
+    except Exception:
+        res = subprocess.run(["sudo", "cat", HTPASSWD_PATH], capture_output=True, text=True, check=False)
+        return res.stdout.splitlines(keepends=True)
+
+def write_htpasswd(content_str):
+    try:
+        with open(HTPASSWD_PATH, "w") as f:
+            f.write(content_str)
+            return
+    except Exception:
+        pass
+    # Se der erro de permissão, ajusta permissões via sudo e grava via sudo tee
+    subprocess.run(["sudo", "chown", "abc:abc", HTPASSWD_PATH], check=False)
+    subprocess.run(["sudo", "chmod", "664", HTPASSWD_PATH], check=False)
+    try:
+        with open(HTPASSWD_PATH, "w") as f:
+            f.write(content_str)
+            return
+    except Exception:
+        p = subprocess.Popen(["sudo", "tee", HTPASSWD_PATH], stdin=subprocess.PIPE, stdout=subprocess.DEVNULL)
+        p.communicate(content_str.encode())
+
 def get_profile():
     p = {"username": os.environ.get("CUSTOM_USER", "Admin"), "displayName": os.environ.get("CUSTOM_USER", "Admin"), "hostname": "cloud-vps", "idleTimeoutMinutes": 15}
     if os.path.exists(PROFILE_PATH):
@@ -32,8 +60,7 @@ def save_credentials(username, password, display_name, timeout_minutes, hostname
         # Use OpenSSL SHA-512 crypt (-6)
         res = subprocess.run(["openssl", "passwd", "-6", password], capture_output=True, text=True)
         hashed = res.stdout.strip()
-        with open(HTPASSWD_PATH, "w") as f:
-            f.write(f"{username}:{hashed}\n")
+        write_htpasswd(f"{username}:{hashed}\n")
         
         # Update system Linux password for abc / sudo
         try:
@@ -42,16 +69,15 @@ def save_credentials(username, password, display_name, timeout_minutes, hostname
         except Exception as e:
             print(f"Error setting system password: {e}")
     else:
-        if os.path.exists(HTPASSWD_PATH):
-            with open(HTPASSWD_PATH) as f:
-                lines = f.readlines()
-            new_lines = []
-            for line in lines:
-                if ":" in line:
-                    _, h = line.strip().split(":", 1)
-                    new_lines.append(f"{username}:{h}\n")
-            with open(HTPASSWD_PATH, "w") as f:
-                f.writelines(new_lines)
+        lines = read_htpasswd()
+        new_lines = []
+        for line in lines:
+            if ":" in line:
+                _, h = line.strip().split(":", 1)
+                new_lines.append(f"{username}:{h}\n")
+        if not new_lines:
+            new_lines = [f"{username}:\n"]
+        write_htpasswd("".join(new_lines))
 
     # Update system GECOS full name in /etc/passwd
     try:
