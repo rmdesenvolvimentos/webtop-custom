@@ -1,5 +1,9 @@
 # Webtop Custom (Windows 11 Style Cloud Desktop)
 
+🌐 **Idioma / Language:** 🇧🇷 Português (atual) | [🇺🇸 English](README.en.md)
+
+---
+
 Uma versão customizada, leve e elegante do **Webtop** (Ubuntu XFCE) da [LinuxServer.io](https://fleet.linuxserver.io/image?name=linuxserver/webtop), transformada em um desktop moderno acessível via navegador com interface inspirada no **Windows 11**, autenticação com tela de bloqueio fluida, loja de aplicativos gráfica, gerenciador de tarefas avançado e ambiente Wine otimizado.
 
 ![Área de Trabalho Windows 11](docs/screenshots/03-desktop.png)

@@ -34,11 +34,8 @@ exec python3 /config/auth_server.py
 SRV
 chmod +x /run/service/svc-webtop-auth/run
 
-# Se não estiver rodando no momento, iniciar imediatamente
-if ! pgrep -f "auth_server.py" >/dev/null 2>&1; then
-    echo "[auth-setup] Iniciando auth_server.py em background..."
-    nohup python3 /config/auth_server.py >/var/log/auth_server.log 2>&1 &
-fi
+# O s6-overlay gerencia o serviço acima automaticamente.
+# NÃO usamos nohup aqui para evitar conflito de porta 9099 (dupla instância).
 
 # 4. Configurar GUI de preferências de usuário
 if [ -f /config/account_settings_gui.py ]; then

@@ -21,10 +21,28 @@ set -euo pipefail
 
 # ─── helpers ─────────────────────────────────────────────────────────────────
 GREEN='\033[0;32m'; YELLOW='\033[1;33m'; RED='\033[0;31m'; CYAN='\033[0;36m'; NC='\033[0m'
-info()  { echo -e "${GREEN}[INFO]${NC}  $*"; }
-warn()  { echo -e "${YELLOW}[WARN]${NC}  $*"; }
-error() { echo -e "${RED}[ERRO]${NC}  $*" >&2; exit 1; }
-step()  { echo -e "${CYAN}[....] ${NC} $*"; }
+
+# ─── Multilanguage: detecta idioma do sistema (fallback: inglês) ──────────────
+_SYS_LANG="${LANG:-${LC_ALL:-en}}"
+case "$_SYS_LANG" in
+  pt*) LANG_CODE="pt" ;;
+  es*) LANG_CODE="es" ;;
+  *)   LANG_CODE="en" ;;
+esac
+
+# msg <texto_pt> <texto_en> [texto_es]
+msg() {
+  case "$LANG_CODE" in
+    pt) printf '%s' "$1" ;;
+    es) printf '%s' "${3:-$2}" ;;
+    *)  printf '%s' "$2" ;;
+  esac
+}
+
+info()  { echo -e "${GREEN}[INFO]${NC}  $(msg "$1" "${2:-$1}" "${3:-}")"; }
+warn()  { echo -e "${YELLOW}[WARN]${NC}  $(msg "$1" "${2:-$1}" "${3:-}")"; }
+error() { echo -e "${RED}[ERRO]${NC}  $(msg "$1" "${2:-$1}" "${3:-}")" >&2; exit 1; }
+
 
 # Detecta o binário docker compose (novo plugin vs legado)
 docker_compose() {
@@ -176,12 +194,20 @@ chmod 644 "$SSL_DIR/cert.pem"
 chmod 600 "$SSL_DIR/cert.key"
 info "Certificados copiados para $SSL_DIR ✓"
 
-# ─── 8. Gravar .env ──────────────────────────────────────────────────────────
-info "Gravando .env..."
-cat > "$REPO_DIR/.env" <<EOF
-# Gerado automaticamente pelo setup.sh em $(date -u +"%Y-%m-%dT%H:%M:%SZ")
-DOMAIN=${DOMAIN}
-EOF
+# ─── 8. Gravar/atualizar .env preservando variáveis existentes ───────────────
+info "Configurando .env..."
+# Se não existe .env, copia do exemplo (mantém PASSWORD, TZ, etc.)
+if [ ! -f "$REPO_DIR/.env" ]; then
+  cp "$REPO_DIR/.env.example" "$REPO_DIR/.env"
+  info ".env criado a partir de .env.example"
+fi
+# Injeta ou atualiza apenas a variável DOMAIN (não apaga as demais)
+if grep -q "^DOMAIN=" "$REPO_DIR/.env"; then
+  sed -i "s|^DOMAIN=.*|DOMAIN=${DOMAIN}|" "$REPO_DIR/.env"
+else
+  echo "DOMAIN=${DOMAIN}" >> "$REPO_DIR/.env"
+fi
+info "DOMAIN=${DOMAIN} gravado em .env ✓"
 
 # ─── 9. Subir o stack ────────────────────────────────────────────────────────
 info "Subindo o Docker stack (docker compose up -d)..."
