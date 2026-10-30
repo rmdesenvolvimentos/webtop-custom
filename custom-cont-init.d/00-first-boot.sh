@@ -32,17 +32,21 @@ if [ -d /config-template ]; then
     fi
 fi
 
-# 3. Forçar /defaults/xfce a usar a barra e tema do Windows 11 (evita fallback do LinuxServer)
+# 3. Forçar /defaults a usar os padrões Windows 11 (evita fallback do LinuxServer)
 if [ -d /config/.config/xfce4/xfconf/xfce-perchannel-xml ]; then
     mkdir -p /defaults/xfce 2>/dev/null || true
     cp -f /config/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-panel.xml /defaults/xfce/ 2>/dev/null || true
     cp -f /config/.config/xfce4/xfconf/xfce-perchannel-xml/xfwm4.xml /defaults/xfce/ 2>/dev/null || true
     cp -f /config/.config/xfce4/xfconf/xfce-perchannel-xml/xsettings.xml /defaults/xfce/ 2>/dev/null || true
 fi
+if [ -f /config/nginx-default.conf ]; then
+    cp -f /config/nginx-default.conf /defaults/default.conf 2>/dev/null || true
+fi
 
-# 4. Ajustar permissões para o usuário abc
+# 4. Ajustar permissões
 chown -R abc:abc /config/.themes /config/.icons /config/.config /config/Desktop /config/wallpapers /config/login_assets 2>/dev/null || true
 chmod +x /config/*.sh /config/*.py /config/webtop-lock 2>/dev/null || true
 chmod +x /config/Desktop/*.desktop 2>/dev/null || true
+chmod 600 /config/.auth_secret 2>/dev/null || true
 
 echo "[first-boot] Personalização do Windows 11 aplicada com sucesso!"

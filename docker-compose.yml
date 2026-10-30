@@ -26,8 +26,8 @@ services:
       - SELKIES_GAMEPAD_ENABLED=false
       - SELKIES_FRAMERATE=30
     ports:
-      - "${PORT_HTTP:-3000}:3000"
-      - "${PORT_HTTPS:-3001}:3001"
+      - "${PORT_HTTP:-80}:3000"
+      - "${PORT_HTTPS:-443}:3001"
     volumes:
       - ./data/config:/config
       - ./custom-cont-init.d:/custom-cont-init.d:ro
