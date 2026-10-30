@@ -29,7 +29,8 @@ def save_credentials(username, password, display_name, timeout_minutes, hostname
     clean_host = re.sub(r'[^a-zA-Z0-9-]', '', (hostname or "cloud-vps").strip().replace(" ", "-")).lower() or "cloud-vps"
 
     if password:
-        res = subprocess.run(["openssl", "passwd", "-apr1", password], capture_output=True, text=True)
+        # Use OpenSSL SHA-512 crypt (-6)
+        res = subprocess.run(["openssl", "passwd", "-6", password], capture_output=True, text=True)
         hashed = res.stdout.strip()
         with open(HTPASSWD_PATH, "w") as f:
             f.write(f"{username}:{hashed}\n")

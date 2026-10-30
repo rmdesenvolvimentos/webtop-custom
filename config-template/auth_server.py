@@ -2,10 +2,12 @@
 """
 Webtop Security Authentication Server
 - HMAC-SHA256 Token Signing & Constant-Time Verification
+- Token Blacklist & Stateful Session Revocation on Logout
+- SHA-512 Crypt ($6$) Strong Password Hashing
 - Rate Limiting & Anti-Brute-Force Lockout
 - Timing Attack Protection (Constant-Time Password Hash Verification)
-- Authenticated Profile Updates Only (No unauthenticated privilege escalation)
-- Idle Lock / Session Management
+- Authenticated Profile Updates Only
+- Local-only lock triggers
 """
 
 import os
@@ -21,6 +23,7 @@ from socketserver import ThreadingMixIn
 from collections import defaultdict
 
 SECRET_PATH = "/config/.auth_secret"
+REVOKED_TOKENS_PATH = "/config/.revoked_tokens"
 HTPASSWD_PATH = "/etc/nginx/.htpasswd"
 PROFILE_PATH = "/config/user_profile.json"
 LOCK_TRIGGER_PATH = "/tmp/webtop_lock_trigger"
@@ -30,6 +33,28 @@ PORT = 9099
 FAILED_ATTEMPTS = defaultdict(list)
 MAX_FAILED_ATTEMPTS = 5
 LOCKOUT_WINDOW_SECONDS = 300  # 5 minutes lockout
+
+# In-memory revoked tokens set (with disk persistence)
+REVOKED_TOKENS = set()
+
+def load_revoked_tokens():
+    global REVOKED_TOKENS
+    if os.path.exists(REVOKED_TOKENS_PATH):
+        try:
+            with open(REVOKED_TOKENS_PATH) as f:
+                REVOKED_TOKENS = set(line.strip() for line in f if line.strip())
+        except Exception:
+            pass
+
+def revoke_token(token):
+    global REVOKED_TOKENS
+    if token:
+        REVOKED_TOKENS.add(token)
+        try:
+            with open(REVOKED_TOKENS_PATH, "a") as f:
+                f.write(f"{token}\n")
+        except Exception:
+            pass
 
 def get_secret():
     """Retrieve or generate high-entropy 256-bit secret with strict permissions."""
@@ -96,8 +121,10 @@ def sign_token(username):
     return f"{payload}:{sig}"
 
 def verify_token(token, max_age_days=30):
-    """Verifies token validity using constant-time comparison."""
+    """Verifies token validity using constant-time comparison and revocation check."""
     if not token or not isinstance(token, str):
+        return False, None
+    if token in REVOKED_TOKENS:
         return False, None
     try:
         parts = token.split(":")
@@ -123,10 +150,10 @@ def verify_token(token, max_age_days=30):
         return False, None
 
 def verify_password(username, password):
-    """Timing-safe password verification with apr1 / sha1 / crypt support."""
+    """Timing-safe password verification supporting SHA-512 crypt ($6$), apr1, sha1."""
     if not os.path.exists(HTPASSWD_PATH) or not password:
         # Dummy computation to normalize execution time
-        subprocess.run(["openssl", "passwd", "-apr1", "-salt", "dummysalt", "dummypass"], capture_output=True, text=True)
+        subprocess.run(["openssl", "passwd", "-6", "-salt", "dummysalt", "dummypass"], capture_output=True, text=True)
         return False
 
     found_user = False
@@ -141,14 +168,21 @@ def verify_password(username, password):
                 u, h = line.split(":", 1)
                 if hmac.compare_digest(u.lower(), username.lower()):
                     found_user = True
-                    # Verify Apache MD5 (apr1)
-                    if h.startswith("$apr1$"):
+                    # Verify modern SHA-512 crypt ($6$)
+                    if h.startswith("$6$"):
+                        parts = h.split("$")
+                        salt = parts[2] if len(parts) > 2 else ""
+                        res = subprocess.run(["openssl", "passwd", "-6", "-salt", salt, password], capture_output=True, text=True)
+                        computed = res.stdout.strip()
+                        valid = hmac.compare_digest(computed, h)
+                    # Verify Apache MD5 (apr1) legacy fallback
+                    elif h.startswith("$apr1$"):
                         parts = h.split("$")
                         salt = parts[2] if len(parts) > 2 else ""
                         res = subprocess.run(["openssl", "passwd", "-apr1", "-salt", salt, password], capture_output=True, text=True)
                         computed = res.stdout.strip()
                         valid = hmac.compare_digest(computed, h)
-                    # Verify SHA1
+                    # Verify SHA1 legacy fallback
                     elif h.startswith("{SHA}"):
                         import base64
                         sha1_hash = "{SHA}" + base64.b64encode(hashlib.sha1(password.encode()).digest()).decode()
@@ -162,7 +196,7 @@ def verify_password(username, password):
 
     if not found_user:
         # Execute dummy hash to prevent username enumeration timing
-        subprocess.run(["openssl", "passwd", "-apr1", "-salt", "dummysalt", password], capture_output=True, text=True)
+        subprocess.run(["openssl", "passwd", "-6", "-salt", "dummysalt", password], capture_output=True, text=True)
         return False
 
     return valid
@@ -170,7 +204,6 @@ def verify_password(username, password):
 def check_rate_limit(ip):
     """Enforces brute-force lockout: max 5 failed attempts in 5 minutes."""
     now = time.time()
-    # Filter attempts within window
     recent = [t for t in FAILED_ATTEMPTS[ip] if now - t < LOCKOUT_WINDOW_SECONDS]
     FAILED_ATTEMPTS[ip] = recent
     if len(recent) >= MAX_FAILED_ATTEMPTS:
@@ -186,11 +219,13 @@ def clear_failed_attempts(ip):
         del FAILED_ATTEMPTS[ip]
 
 def set_user_credentials(username, password, display_name=None):
+    """Updates password using modern SHA-512 crypt ($6$) hashing."""
     disp = display_name.strip() if display_name else username
     clean_user = re.sub(r'[^a-zA-Z0-9_-]', '', username.strip().replace(" ", "_").lower()) or "admin"
 
     if password:
-        res = subprocess.run(["openssl", "passwd", "-apr1", password], capture_output=True, text=True)
+        # Use OpenSSL SHA-512 crypt (-6)
+        res = subprocess.run(["openssl", "passwd", "-6", password], capture_output=True, text=True)
         hashed = res.stdout.strip()
         with open(HTPASSWD_PATH, "w") as f:
             f.write(f"{username}:{hashed}\n")
@@ -237,7 +272,6 @@ class ThreadedHTTPServer(ThreadingMixIn, HTTPServer):
 
 class AuthHandler(BaseHTTPRequestHandler):
     def get_client_ip(self):
-        # Support X-Forwarded-For if set by Nginx
         forwarded = self.headers.get("X-Forwarded-For")
         if forwarded:
             return forwarded.split(",")[0].strip()
@@ -275,9 +309,8 @@ class AuthHandler(BaseHTTPRequestHandler):
 
         elif url_path == "/auth_user":
             profile = get_profile()
-            # Only expose safe public profile fields
+            # Only expose safe public profile fields (Display Name only, avoids leaking system username)
             safe_profile = {
-                "username": profile.get("username", "Admin"),
                 "displayName": profile.get("displayName", "Admin"),
                 "idleTimeoutMinutes": profile.get("idleTimeoutMinutes", 15)
             }
@@ -291,7 +324,13 @@ class AuthHandler(BaseHTTPRequestHandler):
             return
 
         elif url_path == "/auth_lock":
-            # Triggers lock request
+            # SECURITY HARDENING: Only accept lock commands triggered internally (from localhost/desktop)
+            client_ip = self.get_client_ip()
+            if client_ip not in ("127.0.0.1", "::1"):
+                self.send_response(403)
+                self.end_headers()
+                return
+
             try:
                 with open(LOCK_TRIGGER_PATH, "w") as f:
                     f.write(str(time.time()))
@@ -323,6 +362,13 @@ class AuthHandler(BaseHTTPRequestHandler):
             return
 
         elif url_path == "/auth_logout":
+            # SECURITY HARDENING: Invalidate token in server-side blacklist
+            cookie_header = self.headers.get("Cookie", "")
+            cookies = parse_cookies(cookie_header)
+            session_token = cookies.get("webtop_session")
+            if session_token:
+                revoke_token(session_token)
+
             self.send_response(302)
             self.send_header("Set-Cookie", "webtop_session=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0")
             self.send_header("Location", "/login")
@@ -375,7 +421,6 @@ class AuthHandler(BaseHTTPRequestHandler):
                 clear_failed_attempts(client_ip)
                 token = sign_token(username)
                 
-                # Check if HTTPS was used
                 proto = self.headers.get("X-Forwarded-Proto", "").lower()
                 secure_flag = "; Secure" if proto == "https" else ""
                 cookie_val = f"webtop_session={token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=2592000{secure_flag}"
@@ -462,6 +507,7 @@ class AuthHandler(BaseHTTPRequestHandler):
         self.end_headers()
 
 def run():
+    load_revoked_tokens()
     get_secret()
     server = ThreadedHTTPServer(("127.0.0.1", PORT), AuthHandler)
     print(f"Auth server listening on 127.0.0.1:{PORT}")
