@@ -15,7 +15,24 @@ if [ ! -f /tmp/.win11_icons_cached ]; then
     touch /tmp/.win11_icons_cached 2>/dev/null || true
 fi
 
-# 2. Configura Wallpaper em todos os monitores e workspaces detectados no XFCE
+# 2. Configura e garante confiança (Trusted) de todos os atalhos do Desktop (elimina erros de metadata do XFCE 4.18)
+mkdir -p /config/.local/share/gvfs-metadata /config/.local/share/applications 2>/dev/null || true
+[ -f /config/.local/share/gvfs-metadata/home ] || touch /config/.local/share/gvfs-metadata/home 2>/dev/null || true
+
+# Limpa atalhos antigos com nomes problemáticos (caracteres especiais como ':')
+rm -f "/config/Desktop/Disco Local (D:).desktop" "/config/Desktop/Disco%20Local%(D:).desktop" 2>/dev/null || true
+
+for f in /config/Desktop/*.desktop; do
+    [ -f "$f" ] || continue
+    chmod +x "$f"
+    checksum=$(sha256sum "$f" | awk '{print $1}')
+    gio set -t string "$f" metadata::xfce-exe-checksum "$checksum" 2>/dev/null || true
+    gio set -t string "$f" metadata::trusted true 2>/dev/null || true
+    fname=$(basename "$f")
+    cp -f "$f" "/usr/share/applications/$fname" 2>/dev/null || true
+done
+
+# 3. Configura Wallpaper em todos os monitores e workspaces detectados no XFCE
 if [ -f "$WALLPAPER" ]; then
     # Atualiza todas as propriedades de backdrop já criadas pelo xfce4-desktop
     for prop in $(xfconf-query -c xfce4-desktop -l 2>/dev/null | grep "last-image"); do
@@ -42,11 +59,11 @@ if [ -f "$WALLPAPER" ]; then
     xfconf-query -c xfce4-desktop -p "/backdrop/single-workspace-number" -s 0 2>/dev/null || true
 fi
 
-# 3. Posicionamento da Barra de Tarefas na borda inferior
+# 4. Posicionamento da Barra de Tarefas na borda inferior
 xfconf-query -c xfce4-panel -p /panels/panel-1/position -s "p=8;x=0;y=0" 2>/dev/null || true
 xfconf-query -c xfce4-panel -p /panels/panel-1/position-locked -s true 2>/dev/null || true
 
-# 4. Verifica integridade do menu Iniciar (Whisker Menu) e barra centralizada (Docklike)
+# 5. Verifica integridade do menu Iniciar (Whisker Menu) e barra centralizada (Docklike)
 CURRENT_P1=$(xfconf-query -c xfce4-panel -p /plugins/plugin-1 2>/dev/null || true)
 if [ "$CURRENT_P1" != "whiskermenu" ]; then
     echo "[win11-session] Restaurando painel do Windows 11..."
@@ -54,7 +71,7 @@ if [ "$CURRENT_P1" != "whiskermenu" ]; then
     xfce4-panel -r 2>/dev/null || true
 fi
 
-# 5. Recarrega o desktop para exibir wallpaper e ícones
+# 6. Recarrega o desktop para exibir wallpaper e ícones
 if [ ! -f /tmp/.win11_desktop_reloaded ]; then
     sleep 0.5
     xfdesktop --reload 2>/dev/null || true

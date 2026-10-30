@@ -6,5 +6,5 @@ Comment=Alterar tema Dark/Light e bordas de janelas
 Exec=/config/set-theme.sh
 Icon=preferences-desktop-theme
 Terminal=false
-StartupNotify=true
+StartupNotify=false
 Categories=Settings;DesktopSettings;

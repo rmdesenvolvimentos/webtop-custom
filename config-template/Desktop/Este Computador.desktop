@@ -6,5 +6,5 @@ Comment=Explorador de Arquivos
 Exec=thunar /
 Icon=computer
 Terminal=false
-StartupNotify=true
+StartupNotify=false
 Categories=FileManager;

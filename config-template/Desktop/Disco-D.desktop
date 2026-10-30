@@ -7,5 +7,5 @@ Comment=Armazenamento de Dados Persistente (/DATA)
 Exec=thunar /DATA
 Icon=drive-harddisk
 Terminal=false
-StartupNotify=true
+StartupNotify=false
 Categories=FileManager;System;

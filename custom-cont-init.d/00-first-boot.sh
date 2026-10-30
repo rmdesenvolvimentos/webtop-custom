@@ -100,8 +100,25 @@ if [ ! -f /DATA/LEIA-ME.txt ] && [ -f /config-template/Desktop/LEIA-ME.txt ]; th
     chown abc:abc /DATA/LEIA-ME.txt 2>/dev/null || true
 fi
 
-# 8. Ajustar permissões
-chown -R abc:abc /config/.themes /config/.icons /config/.config /config/Desktop /config/wallpapers /config/login_assets 2>/dev/null || true
+# 8. Garantir GVFS metadata e confiar em todos os atalhos do Desktop
+mkdir -p /config/.local/share/gvfs-metadata /config/.local/share/applications /usr/share/applications 2>/dev/null || true
+[ -f /config/.local/share/gvfs-metadata/home ] || touch /config/.local/share/gvfs-metadata/home 2>/dev/null || true
+
+# Limpa atalhos antigos com nomes problemáticos
+rm -f "/config/Desktop/Disco Local (D:).desktop" "/config/Desktop/Disco%20Local%(D:).desktop" 2>/dev/null || true
+
+for f in /config/Desktop/*.desktop; do
+    [ -f "$f" ] || continue
+    chmod +x "$f"
+    checksum=$(sha256sum "$f" | awk '{print $1}')
+    gio set -t string "$f" metadata::xfce-exe-checksum "$checksum" 2>/dev/null || true
+    gio set -t string "$f" metadata::trusted true 2>/dev/null || true
+    fname=$(basename "$f")
+    cp -f "$f" "/usr/share/applications/$fname" 2>/dev/null || true
+done
+
+# 9. Ajustar permissões
+chown -R abc:abc /config/.themes /config/.icons /config/.config /config/.local /config/Desktop /config/wallpapers /config/login_assets 2>/dev/null || true
 chmod +x /config/*.sh /config/*.py /config/webtop-lock 2>/dev/null || true
 chmod +x /config/Desktop/*.desktop 2>/dev/null || true
 chmod 644 /config/Desktop/*.txt 2>/dev/null || true
