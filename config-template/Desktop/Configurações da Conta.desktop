@@ -2,6 +2,11 @@
 Version=1.0
 Type=Application
 Name=Configurações da Conta
+Name[en]=Account Settings
+Name[es]=Configuración de la Cuenta
+Name[de]=Kontoeinstellungen
+Name[fr]=Paramètres du compte
+Name[it]=Impostazioni account
 GenericName=Perfil e Segurança
 Comment=Alterar nome de usuário, senha e tempo de bloqueio da tela
 Exec=account-settings-gui

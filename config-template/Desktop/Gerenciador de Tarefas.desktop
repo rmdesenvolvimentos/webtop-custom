@@ -2,6 +2,11 @@
 Version=1.0
 Type=Application
 Name=Gerenciador de Tarefas
+Name[en]=Task Manager
+Name[es]=Administrador de Tareas
+Name[de]=Task-Manager
+Name[fr]=Gestionnaire des tâches
+Name[it]=Gestione attività
 GenericName=Task Manager
 Comment=Exibe aplicativos e processos em execução e o desempenho do sistema
 Exec=/usr/local/bin/win-taskmgr

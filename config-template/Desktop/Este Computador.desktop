@@ -2,7 +2,12 @@
 Version=1.0
 Type=Application
 Name=Este Computador
-Comment=Explorador de Arquivos
+Name[en]=This PC
+Name[es]=Este Equipo
+Name[de]=Dieser PC
+Name[fr]=Ce PC
+Name[it]=Questo PC
+Comment=File Manager
 Exec=thunar /
 Icon=computer
 Terminal=false

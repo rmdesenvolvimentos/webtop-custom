@@ -2,6 +2,11 @@
 Version=1.0
 Type=Application
 Name=Personalização do Windows
+Name[en]=Windows Personalization
+Name[es]=Personalización de Windows
+Name[de]=Windows-Anpassung
+Name[fr]=Personnalisation de Windows
+Name[it]=Personalizzazione di Windows
 Comment=Alterar tema Dark/Light e bordas de janelas
 Exec=/config/set-theme.sh
 Icon=preferences-desktop-theme

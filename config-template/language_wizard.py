@@ -304,6 +304,16 @@ class LanguageWizard(Gtk.Window):
         with open(DONE_FLAG, 'w') as f:
             f.write(selected)
         self.destroy()
+
+        # Reinicia o painel XFCE e o desktop para recarregar o novo idioma nos menus e ícones imediatamente
+        try:
+            locale_str = f"{selected}.UTF-8"
+            lang_short = selected.split('_')[0]
+            env_cmd = f"export LANG={locale_str}; export LANGUAGE={selected}:{lang_short}; export LC_ALL={locale_str}; "
+            subprocess.Popen(["bash", "-c", f"{env_cmd} xfce4-panel -r 2>/dev/null; {env_cmd} xfdesktop --reload 2>/dev/null &"])
+        except Exception:
+            pass
+
         Gtk.main_quit()
 
     def _on_cancel(self, _btn):

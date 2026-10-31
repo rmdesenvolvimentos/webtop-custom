@@ -2,6 +2,11 @@
 Version=1.0
 Type=Application
 Name=Disco Local (D:)
+Name[en]=Local Disk (D:)
+Name[es]=Disco Local (D:)
+Name[de]=Lokaler Datenträger (D:)
+Name[fr]=Disque local (D:)
+Name[it]=Disco locale (D:)
 GenericName=Armazenamento Persistente
 Comment=Armazenamento de Dados Persistente (/DATA)
 Exec=thunar /DATA
