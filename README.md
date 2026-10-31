@@ -1,6 +1,12 @@
 # Webtop Custom (Windows 11 Style Cloud Desktop)
 
-🌐 **Idioma / Language:** 🇧🇷 Português (atual) | [🇺🇸 English](README.en.md)
+🌐 **Idioma / Language:**
+🇧🇷 Português (atual) &nbsp;|&nbsp;
+[🇺🇸 English](README.en.md) &nbsp;|&nbsp;
+[🇪🇸 Español](README.es.md) &nbsp;|&nbsp;
+[🇩🇪 Deutsch](README.de.md) &nbsp;|&nbsp;
+[🇫🇷 Français](README.fr.md) &nbsp;|&nbsp;
+[🇮🇹 Italiano](README.it.md)
 
 ---
 
@@ -46,6 +52,9 @@ Uma versão customizada, leve e elegante do **Webtop** (Ubuntu XFCE) da [LinuxSe
   - Painel gráfico de preferências de usuário e senha (`account-settings-gui`).
 - **🌐 Acesso Direto por IP na VPS (Portas 80 / 443 Padrão)**:
   - Não requer domínio: acesse direto digitando `http://<IP-DA-VPS>` no navegador sem precisar informar porta.
+- **🌍 Sistema Multilinguagem**:
+  - Assistente de idioma na **primeira execução**: detecta o idioma do sistema e permite confirmar ou escolher entre 🇧🇷 PT · 🇺🇸 EN · 🇪🇸 ES · 🇩🇪 DE · 🇫🇷 FR · 🇮🇹 IT.
+  - Todos os apps (Configurações, Store, Gerenciador de Tarefas) respeitam o idioma selecionado.
 - **🛍️ Microsoft Store Integrada (`win-store`)**:
   - Interface gráfica amigável desenvolvida em Python/GTK3 para instalar, atualizar e remover softwares (VS Code, navegadores, utilitários, pacotes APT).
 - **📊 Gerenciador de Tarefas no Estilo Windows (`win_taskmgr`)**:

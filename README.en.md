@@ -1,6 +1,12 @@
 # Webtop Custom (Windows 11 Style Cloud Desktop)
 
-🌐 **Language / Idioma:** [🇧🇷 Português](README.md) | 🇺🇸 English (current)
+🌐 **Language / Idioma:**
+[🇧🇷 Português](README.md) &nbsp;|&nbsp;
+🇺🇸 English (current) &nbsp;|&nbsp;
+[🇪🇸 Español](README.es.md) &nbsp;|&nbsp;
+[🇩🇪 Deutsch](README.de.md) &nbsp;|&nbsp;
+[🇫🇷 Français](README.fr.md) &nbsp;|&nbsp;
+[🇮🇹 Italiano](README.it.md)
 
 ---
 

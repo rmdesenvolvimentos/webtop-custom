@@ -10,6 +10,13 @@ import gi
 gi.require_version("Gtk", "3.0")
 from gi.repository import Gtk, Gdk, GLib
 
+# i18n – importa módulo de tradução compartilhado
+try:
+    sys.path.insert(0, '/config')
+    from i18n import t
+except ImportError:
+    def t(key, **kw): return key  # fallback sem tradução
+
 PROFILE_PATH = "/config/user_profile.json"
 HTPASSWD_PATH = "/etc/nginx/.htpasswd"
 
@@ -122,7 +129,7 @@ PS1='\\[\\033[01;32m\\]{clean_user}@{clean_host}\\[\\033[00m\\]:\\[\\033[01;34m\
 
 class AccountSettingsWindow(Gtk.Window):
     def __init__(self):
-        super().__init__(title="Configurações da Conta")
+        super().__init__(title=t('account_title'))
         self.set_default_size(440, 590)
         self.set_position(Gtk.WindowPosition.CENTER)
         self.set_resizable(False)
@@ -226,7 +233,7 @@ class AccountSettingsWindow(Gtk.Window):
         title_vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
         self.lbl_title = Gtk.Label(label=self.profile.get("displayName", os.environ.get("CUSTOM_USER", "Admin")), xalign=0)
         self.lbl_title.get_style_context().add_class("user-title")
-        self.lbl_subtitle = Gtk.Label(label=f"Conta Local • {self.profile.get('username', os.environ.get('CUSTOM_USER', 'Admin'))}", xalign=0)
+        self.lbl_subtitle = Gtk.Label(label=f"{t('account_type').split('•')[0].strip()} • {self.profile.get('username', os.environ.get('CUSTOM_USER', 'Admin'))}", xalign=0)
         self.lbl_subtitle.get_style_context().add_class("user-subtitle")
         title_vbox.pack_start(self.lbl_title, False, False, 0)
         title_vbox.pack_start(self.lbl_subtitle, False, False, 0)
@@ -240,7 +247,7 @@ class AccountSettingsWindow(Gtk.Window):
         main_box.pack_start(form_box, True, True, 0)
 
         # 1. Username Field
-        lbl_user = Gtk.Label(label="Nome de Usuário (Login):", xalign=0)
+        lbl_user = Gtk.Label(label=t('username_label'), xalign=0)
         lbl_user.get_style_context().add_class("field-label")
         self.entry_user = Gtk.Entry()
         self.entry_user.set_text(self.profile.get("username", os.environ.get("CUSTOM_USER", "Admin")))
@@ -248,7 +255,7 @@ class AccountSettingsWindow(Gtk.Window):
         form_box.pack_start(self.entry_user, False, False, 0)
 
         # 2. Display Name Field
-        lbl_disp = Gtk.Label(label="Nome de Exibição (Tela de Bloqueio):", xalign=0)
+        lbl_disp = Gtk.Label(label=t('display_name'), xalign=0)
         lbl_disp.get_style_context().add_class("field-label")
         self.entry_disp = Gtk.Entry()
         self.entry_disp.set_text(self.profile.get("displayName", os.environ.get("CUSTOM_USER", "Admin")))
@@ -256,7 +263,7 @@ class AccountSettingsWindow(Gtk.Window):
         form_box.pack_start(self.entry_disp, False, False, 0)
 
         # 3. Hostname / Computer Name Field
-        lbl_host = Gtk.Label(label="Nome do Computador (Hostname no Terminal):", xalign=0)
+        lbl_host = Gtk.Label(label=t('hostname_label'), xalign=0)
         lbl_host.get_style_context().add_class("field-label")
         self.entry_host = Gtk.Entry()
         self.entry_host.set_text(self.profile.get("hostname", "cloud-vps"))
@@ -264,35 +271,35 @@ class AccountSettingsWindow(Gtk.Window):
         form_box.pack_start(self.entry_host, False, False, 0)
 
         # 4. New Password Field
-        lbl_pass = Gtk.Label(label="Nova Senha (deixe em branco para não alterar):", xalign=0)
+        lbl_pass = Gtk.Label(label=t('new_password'), xalign=0)
         lbl_pass.get_style_context().add_class("field-label")
         self.entry_pass = Gtk.Entry()
         self.entry_pass.set_visibility(False)
         form_box.pack_start(lbl_pass, False, False, 0)
         form_box.pack_start(self.entry_pass, False, False, 0)
 
-        # 4. Confirm Password Field
-        lbl_confirm = Gtk.Label(label="Confirmar Nova Senha:", xalign=0)
+        # 5. Confirm Password Field
+        lbl_confirm = Gtk.Label(label=t('confirm_password'), xalign=0)
         lbl_confirm.get_style_context().add_class("field-label")
         self.entry_confirm = Gtk.Entry()
         self.entry_confirm.set_visibility(False)
         form_box.pack_start(lbl_confirm, False, False, 0)
         form_box.pack_start(self.entry_confirm, False, False, 0)
 
-        # 5. Inactivity Timeout Dropdown
-        lbl_timeout = Gtk.Label(label="Bloquear automaticamente após inatividade:", xalign=0)
+        # 6. Inactivity Timeout Dropdown
+        lbl_timeout = Gtk.Label(label=t('idle_timeout'), xalign=0)
         lbl_timeout.get_style_context().add_class("field-label")
         self.combo_timeout = Gtk.ComboBoxText()
-        
+
         self.timeout_options = [
-            (5, "5 minutos"),
-            (10, "10 minutos"),
-            (15, "15 minutos (Padrão)"),
-            (30, "30 minutos"),
-            (60, "1 hora"),
-            (0, "Nunca bloquear automaticamente")
+            (5,  "5 min"),
+            (10, "10 min"),
+            (15, t('timeout_15')),
+            (30, t('timeout_30')),
+            (60, t('timeout_60')),
+            (0,  t('timeout_never')),
         ]
-        
+
         current_to = int(self.profile.get("idleTimeoutMinutes", 15))
         active_idx = 2
         for idx, (val, txt) in enumerate(self.timeout_options):
@@ -300,7 +307,7 @@ class AccountSettingsWindow(Gtk.Window):
             if val == current_to:
                 active_idx = idx
         self.combo_timeout.set_active(active_idx)
-        
+
         form_box.pack_start(lbl_timeout, False, False, 0)
         form_box.pack_start(self.combo_timeout, False, False, 0)
 
@@ -313,12 +320,12 @@ class AccountSettingsWindow(Gtk.Window):
         btn_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
         form_box.pack_start(btn_box, False, False, 8)
 
-        self.btn_save = Gtk.Button(label="Salvar Alterações")
+        self.btn_save = Gtk.Button(label=t('save'))
         self.btn_save.get_style_context().add_class("btn-save")
         self.btn_save.connect("clicked", self.on_save_clicked)
         btn_box.pack_start(self.btn_save, True, True, 0)
 
-        self.btn_lock = Gtk.Button(label="🔒 Bloquear Tela Agora")
+        self.btn_lock = Gtk.Button(label=t('lock_now'))
         self.btn_lock.get_style_context().add_class("btn-lock")
         self.btn_lock.connect("clicked", self.on_lock_clicked)
         btn_box.pack_start(self.btn_lock, False, False, 0)
