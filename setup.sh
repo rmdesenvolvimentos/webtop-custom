@@ -222,20 +222,47 @@ chown -R 1000:1000 "$REPO_DIR/data" 2>/dev/null || true
 info "Subindo o Docker stack..." "Starting Docker stack..."
 docker_compose up -d
 
-# Aguarda container ficar healthy (máx 30s)
-echo -ne "${GREEN}[INFO]${NC}  Aguardando container inicializar"
-for i in $(seq 1 15); do
-  sleep 2
-  echo -n "."
-  STATUS=$(docker inspect --format='{{.State.Status}}' webtop 2>/dev/null || echo "unknown")
-  [[ "$STATUS" == "running" ]] && break
+# ─── 10. Health-check: aguarda o sistema estar 100% pronto ───────────────────
+info "Aguardando o sistema estar pronto (pode levar 2-5 min na 1ª vez)..." \
+     "Waiting for the system to be ready (may take 2-5 min first time)..."
+
+MAX_WAIT=360   # 6 minutos
+ELAPSED=0
+INTERVAL=8
+READY=false
+
+echo -ne "    "
+while [ $ELAPSED -lt $MAX_WAIT ]; do
+  # Tenta HTTPS (443) e HTTP (80) como fallback
+  HTTP_CODE=$(curl -sk --max-time 6 -o /dev/null -w "%{http_code}" "https://${DOMAIN}/" 2>/dev/null \
+           || curl -s  --max-time 6 -o /dev/null -w "%{http_code}" "http://${VPS_IP}/"  2>/dev/null \
+           || echo "000")
+
+  # Qualquer resposta HTTP válida = sistema pronto (200 login, 301 redirect, 401 auth)
+  case "$HTTP_CODE" in
+    200|301|302|401|403)
+      READY=true
+      break
+      ;;
+  esac
+
+  sleep $INTERVAL
+  ELAPSED=$((ELAPSED + INTERVAL))
+  echo -ne "▓"
 done
 echo ""
+
+if [ "$READY" = false ]; then
+  warn "Timeout aguardando resposta (${MAX_WAIT}s). Sistema pode ainda estar instalando." \
+       "Timeout waiting for response (${MAX_WAIT}s). System may still be installing."
+  warn "Tente em alguns minutos: https://${DOMAIN}" \
+       "Try in a few minutes: https://${DOMAIN}"
+fi
 
 # ─── 10. Mensagem final (SEMPRE por último) ───────────────────────────────────
 echo ""
 echo -e "${GREEN}╔══════════════════════════════════════════════════════════════╗${NC}"
-echo -e "${GREEN}║  ✅  Desktop instalado com sucesso e 100%% seguro!           ║${NC}"
+echo -e "${GREEN}║  ✅  Desktop instalado com sucesso e 100% seguro!            ║${NC}"
 echo -e "${GREEN}║  🔒  Acesse agora: https://${DOMAIN}${NC}"
 echo -e "${GREEN}╚══════════════════════════════════════════════════════════════╝${NC}"
 echo ""

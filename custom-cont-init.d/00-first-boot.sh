@@ -140,6 +140,30 @@ chmod +x /config/Desktop/*.desktop 2>/dev/null || true
 chmod 644 /config/Desktop/*.txt 2>/dev/null || true
 chmod 600 /config/.auth_secret 2>/dev/null || true
 
+# 10b. Configura assistente de idioma (language_wizard)
+if [ -f /config-template/language_wizard.py ]; then
+    cp -f /config-template/language_wizard.py /config/language_wizard.py
+    chmod +x /config/language_wizard.py
+fi
+mkdir -p /config/.config/autostart 2>/dev/null || true
+if [ -f /config-template/.config/autostart/language-wizard.desktop ]; then
+    cp -f /config-template/.config/autostart/language-wizard.desktop \
+          /config/.config/autostart/language-wizard.desktop
+fi
+# Aplica idioma salvo em /etc/environment (para XFCE e apps do sistema)
+LANG_PREF_FILE="/config/.language_preference"
+if [ -f "$LANG_PREF_FILE" ]; then
+    PREF_CODE=$(cat "$LANG_PREF_FILE" | tr -d '[:space:]')
+    if [ -n "$PREF_CODE" ]; then
+        LOCALE_STR="${PREF_CODE}.UTF-8"
+        LANG_SHORT="${PREF_CODE%%_*}"
+        printf 'LANG=%s\nLANGUAGE=%s:%s\nLC_ALL=%s\n' \
+            "$LOCALE_STR" "$PREF_CODE" "$LANG_SHORT" "$LOCALE_STR" \
+            > /etc/environment 2>/dev/null || true
+        echo "[first-boot] Idioma aplicado: $PREF_CODE"
+    fi
+fi
+
 # 11. SSL automático via sslip.io + Let's Encrypt (Opção Zero-Touch)
 # Só executa se /config/ssl/cert.pem ainda não existir (ou estiver vazio).
 # Se o usuário rodou setup.sh no host, os certs já estarão presentes e este bloco é pulado.
