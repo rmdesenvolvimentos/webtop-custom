@@ -32,7 +32,8 @@ if [ ! -f /etc/.locales_configured ]; then
         python3-gi-cairo \
         xclip \
         zenity \
-        hicolor-icon-theme 2>/dev/null || true
+        hicolor-icon-theme \
+        language-selector-gnome 2>/dev/null || true
     locale-gen pt_BR.UTF-8 en_US.UTF-8 es_ES.UTF-8 de_DE.UTF-8 fr_FR.UTF-8 it_IT.UTF-8 2>/dev/null || true
     update-locale 2>/dev/null || true
     gdk-pixbuf-query-loaders --update-cache 2>/dev/null || true
@@ -156,44 +157,11 @@ chmod +x /config/Desktop/*.desktop 2>/dev/null || true
 chmod 644 /config/Desktop/*.txt 2>/dev/null || true
 chmod 600 /config/.auth_secret 2>/dev/null || true
 
-# 10b. Configura assistente de idioma e utilitários
-for py_util in language_wizard.py win_language.py; do
-    if [ -f "/config-template/$py_util" ]; then
-        cp -f "/config-template/$py_util" "/config/$py_util"
-        chmod +x "/config/$py_util"
-    fi
-done
-mkdir -p /config/.config/autostart 2>/dev/null || true
-if [ -f /config-template/.config/autostart/language-wizard.desktop ]; then
-    cp -f /config-template/.config/autostart/language-wizard.desktop \
-          /config/.config/autostart/language-wizard.desktop
-fi
-
-# Aplica idioma salvo em /etc/environment e s6 container_environment
-LANG_PREF_FILE="/config/.language_preference"
-if [ -f "$LANG_PREF_FILE" ]; then
-    PREF_CODE=$(cat "$LANG_PREF_FILE" | tr -d '[:space:]')
-    if [ -n "$PREF_CODE" ]; then
-        LOCALE_STR="${PREF_CODE}.UTF-8"
-        LANG_SHORT="${PREF_CODE%%_*}"
-        printf 'LANG=%s\nLANGUAGE=%s:%s\nLC_ALL=%s\n' \
-            "$LOCALE_STR" "$PREF_CODE" "$LANG_SHORT" "$LOCALE_STR" \
-            > /etc/environment 2>/dev/null || true
-        for s6_dir in /var/run/s6/container_environment /run/s6/container_environment; do
-            if [ -d "$s6_dir" ]; then
-                echo -n "$LOCALE_STR" > "$s6_dir/LANG" 2>/dev/null || true
-                echo -n "$LOCALE_STR" > "$s6_dir/LC_ALL" 2>/dev/null || true
-                echo -n "$PREF_CODE:$LANG_SHORT" > "$s6_dir/LANGUAGE" 2>/dev/null || true
-            fi
-        done
-        echo "[first-boot] Idioma aplicado no ambiente: $PREF_CODE"
-    fi
-fi
-
-# Injeta interceptor de locale no /defaults/startwm.sh para carregar o idioma antes de abrir a sessão XFCE
-if [ -f /defaults/startwm.sh ] && ! grep -q "LANGUAGE_INTERCEPTOR" /defaults/startwm.sh; then
-    sed -i '2i # LANGUAGE_INTERCEPTOR\nif [ -f /config/.language_preference ]; then\n  _P=$(cat /config/.language_preference | tr -d "[:space:]")\n  if [ -n "$_P" ]; then\n    export LANG="${_P}.UTF-8"\n    export LC_ALL="${_P}.UTF-8"\n    export LANGUAGE="${_P}:${_P%%_*}"\n  fi\nfi\n' /defaults/startwm.sh 2>/dev/null || true
-fi
+# Limpa atalhos ou utilitários antigos de idioma se existirem
+rm -f /config/language_wizard.py /config/win_language.py \
+      "/config/Desktop/Idioma do Sistema.desktop" \
+      /config/.config/autostart/language-wizard.desktop \
+      /config/.language_preference 2>/dev/null || true
 
 # 11. SSL automático via sslip.io + Let's Encrypt (Opção Zero-Touch)
 # Só executa se /config/ssl/cert.pem ainda não existir (ou estiver vazio).
