@@ -139,3 +139,7 @@ xdg-mime default win-launcher.desktop application/vnd.microsoft.portable-executa
 
 chown -R abc:abc /config/.wine 2>/dev/null || true
 echo "[wine-init] Subsistema Wine configurado e pronto!"
+
+# 8. Flag de inicialização 100% concluída para o setup.sh no host
+touch /config/.ready_flag 2>/dev/null || true
+echo "[webtop-init] Sistema 100% inicializado e pronto para uso!"

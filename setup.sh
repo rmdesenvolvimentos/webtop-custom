@@ -223,12 +223,15 @@ info "Subindo o Docker stack..." "Starting Docker stack..."
 docker_compose up -d
 
 # ─── 10. Health-check: aguarda o sistema estar 100% pronto ───────────────────
-info "Aguardando o sistema estar pronto (pode levar 2-5 min na 1ª vez)..." \
-     "Waiting for the system to be ready (may take 2-5 min first time)..."
+info "Aguardando o sistema concluir a instalação (pode levar 2-5 min na 1ª vez)..." \
+     "Waiting for the system to finish setup (may take 2-5 min first time)..."
 
-MAX_WAIT=360   # 6 minutos
+# Remove qualquer flag antiga de execuções prévias
+rm -f "$REPO_DIR/data/config/.ready_flag" 2>/dev/null || true
+
+MAX_WAIT=480   # 8 minutos para download de pacotes e setup
 ELAPSED=0
-INTERVAL=5
+INTERVAL=3
 READY=false
 
 while [ $ELAPSED -lt $MAX_WAIT ]; do
@@ -238,26 +241,25 @@ while [ $ELAPSED -lt $MAX_WAIT ]; do
   EMPTY_LEN=$(( 25 - BAR_LEN ))
   BAR=$(printf "%${BAR_LEN}s" "" | tr ' ' '█')
   EMPTY=$(printf "%${EMPTY_LEN}s" "" | tr ' ' '-')
-  printf "\r    [${CYAN}%s%s${NC}] %3d%% (${ELAPSED}s/${MAX_WAIT}s)" "$BAR" "$EMPTY" "$PERCENT"
+  printf "\r    [${CYAN}%s%s${NC}] %3d%% (%ds/%ds)" "$BAR" "$EMPTY" "$PERCENT" "$ELAPSED" "$MAX_WAIT"
 
-  # Tenta HTTPS (443) e HTTP (80)
-  HTTP_CODE=$(curl -sk --max-time 4 -o /dev/null -w "%{http_code}" "https://${DOMAIN}/" 2>/dev/null \
-           || curl -s  --max-time 4 -o /dev/null -w "%{http_code}" "http://${VPS_IP}/"  2>/dev/null \
-           || echo "000")
-
-  # 200 (login/webtop carregado) ou 401 (auth) indicam que o web server + backend responderam
-  case "$HTTP_CODE" in
-    200|401|403)
-      READY=true
-      break
-      ;;
-  esac
+  # Verifica se o último script do container concluiu com sucesso
+  if [ -f "$REPO_DIR/data/config/.ready_flag" ]; then
+    READY=true
+    break
+  fi
 
   sleep $INTERVAL
   ELAPSED=$((ELAPSED + INTERVAL))
 done
 
-printf "\r    [${CYAN}%s${NC}] 100%% (%ss) - Pronto!      \n" "$(printf '%25s' '' | tr ' ' '█')" "$ELAPSED"
+if [ "$READY" = true ]; then
+  printf "\r    [${CYAN}%s${NC}] 100%% (%ds) - Sistema 100%% pronto!            \n" "$(printf '%25s' '' | tr ' ' '█')" "$ELAPSED"
+else
+  printf "\n"
+  warn "Tempo limite atingido (%ds). O contêiner ainda pode estar concluindo as tarefas." "$MAX_WAIT" \
+       "Timeout reached (%ds). The container might still be finishing tasks." "$MAX_WAIT"
+fi
 
 if [ "$READY" = false ]; then
   warn "Timeout aguardando resposta (${MAX_WAIT}s). Sistema pode ainda estar instalando." \
