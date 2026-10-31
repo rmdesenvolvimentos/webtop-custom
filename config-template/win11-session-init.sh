@@ -3,12 +3,14 @@
 
 # 0. Aplicar idioma preferido (salvo pelo language_wizard ou padrão)
 LANG_PREF_FILE="$HOME/.language_preference"
+[ -f "$LANG_PREF_FILE" ] || LANG_PREF_FILE="/config/.language_preference"
 if [ -f "$LANG_PREF_FILE" ]; then
     PREF_CODE=$(cat "$LANG_PREF_FILE" | tr -d '[:space:]')
     if [ -n "$PREF_CODE" ]; then
         export LANG="${PREF_CODE}.UTF-8"
         export LANGUAGE="${PREF_CODE}:${PREF_CODE%%_*}"
         export LC_ALL="${PREF_CODE}.UTF-8"
+        xfconf-query -c xfce4-session -p /general/LangEnvironment --create -t string -s "${PREF_CODE}.UTF-8" 2>/dev/null || true
     fi
 fi
 

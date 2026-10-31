@@ -135,7 +135,7 @@ Edit `.env` to set your credentials and preferences:
 ```ini
 # Login credentials
 CUSTOM_USER=Admin
-PASSWORD=YourStrongPassword123!
+PASSWORD=AltereSuaSenhaForte123!
 
 # Host ports (80 HTTP and 443 HTTPS for direct IP access)
 PORT_HTTP=80

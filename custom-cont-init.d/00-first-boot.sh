@@ -5,10 +5,17 @@ echo "[first-boot] Verificando integridade das configurações do Windows 11..."
 
 # 1. Garante que os plugins e dependências essenciais de UI estejam instalados
 if ! dpkg -s xfce4-docklike-plugin >/dev/null 2>&1 || ! dpkg -s librsvg2-common >/dev/null 2>&1; then
-    echo "[first-boot] Instalando plugins essenciais (whiskermenu, docklike, genmon, librsvg)..."
+    echo "[first-boot] Instalando plugins essenciais (whiskermenu, docklike, genmon, librsvg, locales)..."
     export DEBIAN_FRONTEND=noninteractive
     apt-get update -qq
     apt-get install -y -qq --no-install-recommends \
+        locales \
+        language-pack-it \
+        language-pack-en \
+        language-pack-es \
+        language-pack-de \
+        language-pack-fr \
+        language-pack-pt \
         xfce4-whiskermenu-plugin \
         xfce4-docklike-plugin \
         xfce4-genmon-plugin \
@@ -20,6 +27,8 @@ if ! dpkg -s xfce4-docklike-plugin >/dev/null 2>&1 || ! dpkg -s librsvg2-common 
         xclip \
         zenity \
         hicolor-icon-theme 2>/dev/null || true
+    locale-gen pt_BR.UTF-8 en_US.UTF-8 es_ES.UTF-8 de_DE.UTF-8 fr_FR.UTF-8 it_IT.UTF-8 2>/dev/null || true
+    update-locale 2>/dev/null || true
     gdk-pixbuf-query-loaders --update-cache 2>/dev/null || true
 fi
 

@@ -228,19 +228,26 @@ info "Aguardando o sistema estar pronto (pode levar 2-5 min na 1ª vez)..." \
 
 MAX_WAIT=360   # 6 minutos
 ELAPSED=0
-INTERVAL=8
+INTERVAL=5
 READY=false
 
-echo -ne "    "
 while [ $ELAPSED -lt $MAX_WAIT ]; do
-  # Tenta HTTPS (443) e HTTP (80) como fallback
-  HTTP_CODE=$(curl -sk --max-time 6 -o /dev/null -w "%{http_code}" "https://${DOMAIN}/" 2>/dev/null \
-           || curl -s  --max-time 6 -o /dev/null -w "%{http_code}" "http://${VPS_IP}/"  2>/dev/null \
+  # Progresso visual dinâmico com porcentagem e tempo decorrido
+  PERCENT=$(( (ELAPSED * 100) / MAX_WAIT ))
+  BAR_LEN=$(( PERCENT / 4 ))
+  EMPTY_LEN=$(( 25 - BAR_LEN ))
+  BAR=$(printf "%${BAR_LEN}s" "" | tr ' ' '█')
+  EMPTY=$(printf "%${EMPTY_LEN}s" "" | tr ' ' '-')
+  printf "\r    [${CYAN}%s%s${NC}] %3d%% (${ELAPSED}s/${MAX_WAIT}s)" "$BAR" "$EMPTY" "$PERCENT"
+
+  # Tenta HTTPS (443) e HTTP (80)
+  HTTP_CODE=$(curl -sk --max-time 4 -o /dev/null -w "%{http_code}" "https://${DOMAIN}/" 2>/dev/null \
+           || curl -s  --max-time 4 -o /dev/null -w "%{http_code}" "http://${VPS_IP}/"  2>/dev/null \
            || echo "000")
 
-  # Qualquer resposta HTTP válida = sistema pronto (200 login, 301 redirect, 401 auth)
+  # 200 (login/webtop carregado) ou 401 (auth) indicam que o web server + backend responderam
   case "$HTTP_CODE" in
-    200|301|302|401|403)
+    200|401|403)
       READY=true
       break
       ;;
@@ -248,9 +255,9 @@ while [ $ELAPSED -lt $MAX_WAIT ]; do
 
   sleep $INTERVAL
   ELAPSED=$((ELAPSED + INTERVAL))
-  echo -ne "▓"
 done
-echo ""
+
+printf "\r    [${CYAN}%s${NC}] 100%% (%ss) - Pronto!      \n" "$(printf '%25s' '' | tr ' ' '█')" "$ELAPSED"
 
 if [ "$READY" = false ]; then
   warn "Timeout aguardando resposta (${MAX_WAIT}s). Sistema pode ainda estar instalando." \

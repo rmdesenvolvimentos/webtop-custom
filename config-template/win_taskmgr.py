@@ -35,6 +35,13 @@ gi.require_version("Pango", "1.0")
 from gi.repository import Gtk, Gdk, GLib, Pango, GObject
 import cairo
 
+# Suporte i18n
+try:
+    sys.path.insert(0, '/config')
+    from i18n import t
+except ImportError:
+    def t(key, **kw): return key
+
 # Friendly App Names and Icons
 KNOWN_APPS = {
     "chrome": ("Google Chrome", "google-chrome"),

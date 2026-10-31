@@ -18,7 +18,7 @@ services:
       - SUBFOLDER=/
       - TITLE=${TITLE:-Cloud Desktop}
       - CUSTOM_USER=${CUSTOM_USER:-Admin}
-      - PASSWORD=${PASSWORD:-ChangeMe123!}
+      - PASSWORD=${PASSWORD:-AltereSuaSenhaForte123!}
       - LANG=${LANG:-pt_BR.UTF-8}
       - LANGUAGE=${LANGUAGE:-pt_BR:pt}
       - LC_ALL=${LC_ALL:-pt_BR.UTF-8}

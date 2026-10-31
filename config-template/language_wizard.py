@@ -32,9 +32,9 @@ UI = {
         'title':    'Bem-vindo ao Cloud Desktop',
         'detected': 'Idioma detectado:',
         'question': 'Confirme o idioma ou escolha outro:',
-        'confirm':  '✓  Confirmar',
+        'confirm':  '✓  Confirmar e Aplicar',
         'cancel':   'Cancelar',
-        'note':     'Para aplicar completamente, faça logout e login novamente.',
+        'note':     'As alterações serão salvas. Recomenda-se reiniciar o container ou deslogar para aplicar 100% no XFCE.',
     },
     'en_US': {
         'title':    'Welcome to Cloud Desktop',
@@ -72,9 +72,9 @@ UI = {
         'title':    'Benvenuto in Cloud Desktop',
         'detected': 'Lingua rilevata:',
         'question': 'Conferma la lingua o scegline un\'altra:',
-        'confirm':  '✓  Conferma',
+        'confirm':  '✓  Conferma e Applica',
         'cancel':   'Annulla',
-        'note':     'Per applicare completamente, esci e accedi di nuovo.',
+        'note':     'Le modifiche sono salvate. Riavvia il container o disconnettiti per applicare al 100% in XFCE.',
     },
 }
 
@@ -93,9 +93,13 @@ def detect_current_lang():
 
 def save_language(code):
     """Salva preferência e aplica locale no ambiente da sessão."""
-    with open(LANG_FILE, 'w') as f:
-        f.write(code)
-    # Atualiza /etc/environment via sudo (best-effort, sem bloquear)
+    for p in [LANG_FILE, '/config/.language_preference']:
+        try:
+            with open(p, 'w') as f:
+                f.write(code)
+        except Exception:
+            pass
+
     locale_str = f"{code}.UTF-8"
     lang_short  = code.split('_')[0]
     env_content = (
@@ -103,14 +107,24 @@ def save_language(code):
         f'LANGUAGE={code}:{lang_short}\n'
         f'LC_ALL={locale_str}\n'
     )
+
+    # 1. Atualiza /etc/environment e /etc/default/locale via sudo
     try:
         tmp = '/tmp/.lang_env_new'
         with open(tmp, 'w') as f:
             f.write(env_content)
         subprocess.run(['sudo', 'cp', tmp, '/etc/environment'], check=False, timeout=5)
+        subprocess.run(['sudo', 'cp', tmp, '/etc/default/locale'], check=False, timeout=5)
     except Exception:
         pass
-    # xfconf XFCE locale (best-effort)
+
+    # 2. Gera locales dinamicamente se necessário
+    try:
+        subprocess.run(['sudo', 'locale-gen', locale_str], check=False, timeout=10)
+    except Exception:
+        pass
+
+    # 3. Atualiza xfconf para a sessão XFCE
     try:
         subprocess.run(
             ['xfconf-query', '-c', 'xfce4-session', '-p',
@@ -118,6 +132,15 @@ def save_language(code):
             check=False, timeout=5)
     except Exception:
         pass
+
+    # 4. Grava em ~/.profile e ~/.bashrc para terminais e novos processos
+    export_lines = f'\nexport LANG="{locale_str}"\nexport LANGUAGE="{code}:{lang_short}"\nexport LC_ALL="{locale_str}"\n'
+    for profile_file in [os.path.join(HOME, '.profile'), os.path.join(HOME, '.bashrc')]:
+        try:
+            with open(profile_file, 'a') as f:
+                f.write(export_lines)
+        except Exception:
+            pass
 
 
 def get_lang_info(code):

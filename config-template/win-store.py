@@ -21,6 +21,13 @@ gi.require_version("Gdk", "3.0")
 gi.require_version("Pango", "1.0")
 from gi.repository import Gtk, Gdk, GLib, Pango, GdkPixbuf
 
+# Suporte i18n
+try:
+    sys.path.insert(0, '/config')
+    from i18n import t
+except ImportError:
+    def t(key, **kw): return key
+
 try:
     import apt
 except ImportError:

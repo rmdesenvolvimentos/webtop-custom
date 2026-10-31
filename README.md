@@ -136,7 +136,7 @@ Edite o arquivo `.env` para definir suas credenciais e preferências:
 ```ini
 # Usuário e Senha de Acesso
 CUSTOM_USER=Admin
-PASSWORD=SuaSenhaForteAqui123!
+PASSWORD=AltereSuaSenhaForte123!
 
 # Portas de Acesso no Servidor (Padrão: 80 HTTP e 443 HTTPS para acesso direto por IP)
 PORT_HTTP=80
