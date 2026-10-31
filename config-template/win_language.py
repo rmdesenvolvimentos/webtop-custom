@@ -209,10 +209,22 @@ class LanguageApp(Gtk.Window):
             except Exception:
                 pass
 
-        # Injeta interceptor no /defaults/startwm.sh para garantir que o xfce4-session carregue o novo idioma ao reiniciar
+        # Injeta wrapper garantido em /defaults/startwm.sh
         try:
-            interceptor = 'if [ -f /config/.language_preference ]; then _P=$(cat /config/.language_preference | tr -d "[:space:]"); if [ -n "$_P" ]; then export LANG="${_P}.UTF-8"; export LC_ALL="${_P}.UTF-8"; export LANGUAGE="${_P}:${_P%%_*}"; fi; fi'
-            subprocess.run(['sudo', 'bash', '-c', f'grep -q "LANGUAGE_INTERCEPTOR" /defaults/startwm.sh || sed -i "2i # LANGUAGE_INTERCEPTOR\\n{interceptor}\\n" /defaults/startwm.sh'], check=False)
+            wrapper_content = f"""#!/bin/bash
+export LANG="{locale_str}"
+export LC_ALL="{locale_str}"
+export LANGUAGE="{selected_code}:{lang_short}"
+if [ ! -d "${{HOME}}"/.config/xfce4/xfconf/xfce-perchannel-xml ]; then
+  mkdir -p "${{HOME}}"/.config/xfce4/xfconf/xfce-perchannel-xml
+  cp /defaults/xfce/* "${{HOME}}"/.config/xfce4/xfconf/xfce-perchannel-xml/
+fi
+exec dbus-launch --exit-with-session /usr/bin/xfce4-session > /dev/null 2>&1
+"""
+            with open('/tmp/new_startwm.sh', 'w') as f:
+                f.write(wrapper_content)
+            subprocess.run(['sudo', 'cp', '/tmp/new_startwm.sh', '/defaults/startwm.sh'], check=False)
+            subprocess.run(['sudo', 'chmod', '+x', '/defaults/startwm.sh'], check=False)
         except Exception:
             pass
 

@@ -3,19 +3,25 @@
 
 echo "[first-boot] Verificando integridade das configurações do Windows 11..."
 
-# 1. Garante que os plugins e dependências essenciais de UI estejam instalados
-if ! dpkg -s xfce4-docklike-plugin >/dev/null 2>&1 || ! dpkg -s librsvg2-common >/dev/null 2>&1; then
-    echo "[first-boot] Instalando plugins essenciais (whiskermenu, docklike, genmon, librsvg, locales)..."
+# 1. Garante que os pacotes de idioma, plugins e dependências essenciais de UI estejam instalados
+if [ ! -f /etc/.locales_configured ]; then
+    echo "[first-boot] Instalando pacotes de idiomas oficiais (IT, ES, DE, FR, PT, EN)..."
     export DEBIAN_FRONTEND=noninteractive
     apt-get update -qq
     apt-get install -y -qq --no-install-recommends \
         locales \
         language-pack-it \
-        language-pack-en \
+        language-pack-gnome-it \
         language-pack-es \
+        language-pack-gnome-es \
         language-pack-de \
+        language-pack-gnome-de \
         language-pack-fr \
+        language-pack-gnome-fr \
         language-pack-pt \
+        language-pack-gnome-pt \
+        language-pack-en \
+        language-pack-gnome-en \
         xfce4-whiskermenu-plugin \
         xfce4-docklike-plugin \
         xfce4-genmon-plugin \
@@ -30,6 +36,7 @@ if ! dpkg -s xfce4-docklike-plugin >/dev/null 2>&1 || ! dpkg -s librsvg2-common 
     locale-gen pt_BR.UTF-8 en_US.UTF-8 es_ES.UTF-8 de_DE.UTF-8 fr_FR.UTF-8 it_IT.UTF-8 2>/dev/null || true
     update-locale 2>/dev/null || true
     gdk-pixbuf-query-loaders --update-cache 2>/dev/null || true
+    touch /etc/.locales_configured 2>/dev/null || true
 fi
 
 # 2. Descompacta temas, ícones e wallpapers
