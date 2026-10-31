@@ -202,12 +202,26 @@ class LanguageApp(Gtk.Window):
         except Exception:
             pass
 
+        # Atualiza o s6 container_environment se acessível via sudo
+        for s6_dir in ['/var/run/s6/container_environment', '/run/s6/container_environment']:
+            try:
+                subprocess.run(['sudo', 'bash', '-c', f'echo -n "{locale_str}" > {s6_dir}/LANG; echo -n "{locale_str}" > {s6_dir}/LC_ALL; echo -n "{selected_code}:{lang_short}" > {s6_dir}/LANGUAGE'], check=False)
+            except Exception:
+                pass
+
+        # Injeta interceptor no /defaults/startwm.sh para garantir que o xfce4-session carregue o novo idioma ao reiniciar
+        try:
+            interceptor = 'if [ -f /config/.language_preference ]; then _P=$(cat /config/.language_preference | tr -d "[:space:]"); if [ -n "$_P" ]; then export LANG="${_P}.UTF-8"; export LC_ALL="${_P}.UTF-8"; export LANGUAGE="${_P}:${_P%%_*}"; fi; fi'
+            subprocess.run(['sudo', 'bash', '-c', f'grep -q "LANGUAGE_INTERCEPTOR" /defaults/startwm.sh || sed -i "2i # LANGUAGE_INTERCEPTOR\\n{interceptor}\\n" /defaults/startwm.sh'], check=False)
+        except Exception:
+            pass
+
         self.btn_apply.set_sensitive(False)
         self.btn_apply.set_label("⏳ Aplicando...")
 
         # Dispara reinício da sessão desktop X11
         # No Webtop LinuxServer, matar o xfce4-session faz o supervisor s6 reiniciar a interface em 1 segundo
-        subprocess.Popen(['bash', '-c', 'sleep 1; pkill -9 xfce4-session || pkill -9 xfdesktop || sudo pkill -f Xorg'])
+        subprocess.Popen(['bash', '-c', 'sleep 1; pkill -9 -f xfce4-session || pkill -9 -f xfdesktop || sudo pkill -f Xorg'])
 
         GLM = GLib.timeout_add(1500, Gtk.main_quit)
 
