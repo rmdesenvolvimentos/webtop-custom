@@ -37,10 +37,24 @@ for f in /config/Desktop/*.desktop; do
     checksum=$(sha256sum "$f" | awk '{print $1}')
     gio set -t string "$f" metadata::xfce-exe-checksum "$checksum" 2>/dev/null || true
     gio set -t string "$f" metadata::trusted true 2>/dev/null || true
-    fname=$(basename "$f")
-    cp -f "$f" "/usr/share/applications/$fname" 2>/dev/null || true
-    cp -f "$f" "/config/.local/share/applications/$fname" 2>/dev/null || true
 done
+
+# Limpa atalhos duplicados da pasta local do usuário
+rm -f \
+    "/config/.local/share/applications/CMD.desktop" \
+    "/config/.local/share/applications/Disco-D.desktop" \
+    "/config/.local/share/applications/Este Computador.desktop" \
+    "/config/.local/share/applications/Gerenciador de Tarefas.desktop" \
+    "/config/.local/share/applications/Google Chrome.desktop" \
+    "/config/.local/share/applications/Microsoft Store.desktop" \
+    "/config/.local/share/applications/OpenCode.desktop" \
+    "/config/.local/share/applications/Personalização do Windows.desktop" \
+    "/config/.local/share/applications/Configurações da Conta.desktop" \
+    "/config/.local/share/applications/thunar-real.desktop" \
+    "/config/.local/share/applications/opencode.desktop" \
+    "/config/.local/share/applications/google-chrome.desktop" \
+    "/config/.local/share/applications/code.desktop" \
+    "/config/.local/share/applications/win-store.desktop" 2>/dev/null || true
 
 # 3. Configura Wallpaper em todos os monitores e workspaces detectados no XFCE
 if [ -f "$WALLPAPER" ]; then

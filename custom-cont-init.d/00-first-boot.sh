@@ -3,25 +3,49 @@
 
 echo "[first-boot] Verificando integridade das configurações do Windows 11..."
 
-# 1. Garante que os pacotes de idioma, plugins e dependências essenciais de UI estejam instalados
-if [ ! -f /etc/.locales_configured ]; then
-    echo "[first-boot] Instalando pacotes de idiomas oficiais (IT, ES, DE, FR, PT, EN)..."
+# 1. Garante permissões de PolicyKit (Polkit) sem senha para o usuário abc e grupo sudo
+# Isso resolve o erro: org.freedesktop.PolicyKit.Error.Failed: org.debian.apt.install-or-remove-packages
+mkdir -p /etc/polkit-1/rules.d /usr/share/polkit-1/rules.d /etc/polkit-1/localauthority/50-local.d 2>/dev/null || true
+
+cat << 'EOF' > /etc/polkit-1/rules.d/49-nopasswd_webtop.rules
+polkit.addRule(function(action, subject) {
+    if (subject.isInGroup("sudo") || subject.isInGroup("abc") || subject.user === "abc" || subject.user === "root") {
+        return polkit.Result.YES;
+    }
+});
+EOF
+cp -f /etc/polkit-1/rules.d/49-nopasswd_webtop.rules /usr/share/polkit-1/rules.d/49-nopasswd_webtop.rules 2>/dev/null || true
+chmod 700 /etc/polkit-1/rules.d 2>/dev/null || true
+chmod 644 /etc/polkit-1/rules.d/49-nopasswd_webtop.rules /usr/share/polkit-1/rules.d/49-nopasswd_webtop.rules 2>/dev/null || true
+chown -R root:root /etc/polkit-1/rules.d /usr/share/polkit-1/rules.d 2>/dev/null || true
+
+cat << 'EOF' > /etc/polkit-1/localauthority/50-local.d/49-nopasswd_webtop.pkla
+[Allow abc and sudo all permissions]
+Identity=unix-user:abc;unix-group:sudo;unix-group:abc
+Action=*
+ResultAny=yes
+ResultInactive=yes
+ResultActive=yes
+EOF
+chmod 644 /etc/polkit-1/localauthority/50-local.d/49-nopasswd_webtop.pkla 2>/dev/null || true
+
+touch /etc/default/locale 2>/dev/null || true
+chmod 666 /etc/default/locale 2>/dev/null || true
+
+# 1b. Garante que todos os pacotes de idioma oficiais e dependências essenciais estejam instalados
+if [ ! -f /etc/.locales_v3_configured ] || ! dpkg -s language-pack-gnome-it >/dev/null 2>&1 || ! dpkg -s language-selector-gnome >/dev/null 2>&1; then
+    echo "[first-boot] Instalando pacotes completos de idiomas (IT, ES, DE, FR, PT, EN) e suporte nativo..."
     export DEBIAN_FRONTEND=noninteractive
     apt-get update -qq
     apt-get install -y -qq --no-install-recommends \
         locales \
-        language-pack-it \
-        language-pack-gnome-it \
-        language-pack-es \
-        language-pack-gnome-es \
-        language-pack-de \
-        language-pack-gnome-de \
-        language-pack-fr \
-        language-pack-gnome-fr \
-        language-pack-pt \
-        language-pack-gnome-pt \
-        language-pack-en \
-        language-pack-gnome-en \
+        language-pack-it language-pack-it-base language-pack-gnome-it language-pack-gnome-it-base \
+        language-pack-es language-pack-es-base language-pack-gnome-es language-pack-gnome-es-base \
+        language-pack-de language-pack-de-base language-pack-gnome-de language-pack-gnome-de-base \
+        language-pack-fr language-pack-fr-base language-pack-gnome-fr language-pack-gnome-fr-base \
+        language-pack-pt language-pack-pt-base language-pack-gnome-pt language-pack-gnome-pt-base \
+        language-pack-en language-pack-en-base language-pack-gnome-en language-pack-gnome-en-base \
+        hunspell-pt-br hunspell-en-us hunspell-es hunspell-de-de hunspell-fr hunspell-it \
         xfce4-whiskermenu-plugin \
         xfce4-docklike-plugin \
         xfce4-genmon-plugin \
@@ -33,11 +57,19 @@ if [ ! -f /etc/.locales_configured ]; then
         xclip \
         zenity \
         hicolor-icon-theme \
-        language-selector-gnome 2>/dev/null || true
-    locale-gen pt_BR.UTF-8 en_US.UTF-8 es_ES.UTF-8 de_DE.UTF-8 fr_FR.UTF-8 it_IT.UTF-8 2>/dev/null || true
+        language-selector-gnome \
+        language-selector-common 2>/dev/null || true
+    locale-gen pt_BR.UTF-8 pt_PT.UTF-8 en_US.UTF-8 en_GB.UTF-8 es_ES.UTF-8 de_DE.UTF-8 fr_FR.UTF-8 it_IT.UTF-8 2>/dev/null || true
     update-locale 2>/dev/null || true
     gdk-pixbuf-query-loaders --update-cache 2>/dev/null || true
-    touch /etc/.locales_configured 2>/dev/null || true
+    touch /etc/.locales_v3_configured 2>/dev/null || true
+fi
+
+# Injeta sincronizador de locale no /defaults/startwm.sh
+if [ -f /defaults/startwm.sh ]; then
+    if ! grep -q "LOCALE_SYNC_LOADER" /defaults/startwm.sh; then
+        sed -i '2i # LOCALE_SYNC_LOADER\nif [ -f /etc/default/locale ]; then . /etc/default/locale; fi\nif [ -f "$HOME/.pam_environment" ]; then\n  while IFS= read -r line || [ -n "$line" ]; do\n    line=$(echo "$line" | sed "s/ DEFAULT=//" | tr -d "\\"" | tr -d "\\r")\n    case "$line" in\n      LANG=*|LANGUAGE=*|LC_*=*) export "$line" ;;\n    esac\n  done < "$HOME/.pam_environment"\nfi\nif [ -f "$HOME/.config/locale.conf" ]; then . "$HOME/.config/locale.conf"; fi\nunset LC_ALL\n' /defaults/startwm.sh 2>/dev/null || true
+    fi
 fi
 
 # 2. Descompacta temas, ícones e wallpapers
@@ -132,11 +164,62 @@ for f in /config/Desktop/*.desktop; do
     checksum=$(sha256sum "$f" | awk "{print \$1}")
     gio set -t string "$f" metadata::xfce-exe-checksum "$checksum" 2>/dev/null || true
     gio set -t string "$f" metadata::trusted true 2>/dev/null || true
-    fname=$(basename "$f")
-    cp -f "$f" "/usr/share/applications/$fname" 2>/dev/null || true
-    cp -f "$f" "/config/.local/share/applications/$fname" 2>/dev/null || true
 done
 ' 2>/dev/null || true
+
+# Limpeza profunda de atalhos duplicados no Menu Iniciar (Whisker Menu)
+rm -f \
+    "/config/.local/share/applications/CMD.desktop" \
+    "/config/.local/share/applications/Disco-D.desktop" \
+    "/config/.local/share/applications/Este Computador.desktop" \
+    "/config/.local/share/applications/Gerenciador de Tarefas.desktop" \
+    "/config/.local/share/applications/Google Chrome.desktop" \
+    "/config/.local/share/applications/Microsoft Store.desktop" \
+    "/config/.local/share/applications/OpenCode.desktop" \
+    "/config/.local/share/applications/Personalização do Windows.desktop" \
+    "/config/.local/share/applications/Configurações da Conta.desktop" \
+    "/config/.local/share/applications/thunar-real.desktop" \
+    "/config/.local/share/applications/opencode.desktop" \
+    "/config/.local/share/applications/google-chrome.desktop" \
+    "/config/.local/share/applications/code.desktop" \
+    "/config/.local/share/applications/win-store.desktop" \
+    "/usr/share/applications/CMD.desktop" \
+    "/usr/share/applications/Disco-D.desktop" \
+    "/usr/share/applications/Este Computador.desktop" \
+    "/usr/share/applications/Gerenciador de Tarefas.desktop" \
+    "/usr/share/applications/Google Chrome.desktop" \
+    "/usr/share/applications/Microsoft Store.desktop" \
+    "/usr/share/applications/OpenCode.desktop" \
+    "/usr/share/applications/Personalização do Windows.desktop" \
+    "/usr/share/applications/Configurações da Conta.desktop" \
+    "/usr/share/applications/opencode.desktop" \
+    "/usr/share/applications/opencode-desktop.desktop" 2>/dev/null || true
+
+# Ocultar lançadores secundários duplicados do menu Whisker
+for app in \
+    debian-uxterm.desktop \
+    debian-xterm.desktop \
+    xfce4-terminal-emulator.desktop \
+    code-url-handler.desktop \
+    com.microsoft.VSCode.UrlHandler.desktop \
+    thunar-real.desktop; do
+    if [ -f "/usr/share/applications/$app" ]; then
+        if ! grep -q "NoDisplay=true" "/usr/share/applications/$app"; then
+            echo "NoDisplay=true" >> "/usr/share/applications/$app"
+        fi
+    fi
+done
+
+if [ -f "/usr/share/applications/code.desktop" ] && [ -f "/usr/share/applications/com.microsoft.VSCode.desktop" ]; then
+    grep -q "NoDisplay=true" "/usr/share/applications/com.microsoft.VSCode.desktop" || echo "NoDisplay=true" >> "/usr/share/applications/com.microsoft.VSCode.desktop"
+fi
+
+if [ -f /usr/share/applications/gnome-language-selector.desktop ]; then
+    sed -i 's/^OnlyShowIn=.*/#&/' /usr/share/applications/gnome-language-selector.desktop 2>/dev/null || true
+fi
+
+update-desktop-database /config/.local/share/applications 2>/dev/null || true
+update-desktop-database /usr/share/applications 2>/dev/null || true
 
 # 9. Garantir permissões do .htpasswd e autenticação para o usuário abc
 mkdir -p /etc/nginx 2>/dev/null || true

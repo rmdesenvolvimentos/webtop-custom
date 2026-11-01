@@ -146,7 +146,7 @@ MimeType=x-scheme-handler/opencode;
 Categories=Development;IDE;
 EOF
 chmod +x /usr/share/applications/ai.opencode.desktop.desktop
-ln -sf /usr/share/applications/ai.opencode.desktop.desktop /usr/share/applications/opencode.desktop 2>/dev/null || true
+rm -f /usr/share/applications/opencode.desktop /usr/share/applications/opencode-desktop.desktop 2>/dev/null || true
 
 # 4. Instalação da Microsoft Store (win-store)
 if [ -f /config/win-store.py ]; then
@@ -194,6 +194,7 @@ StartupNotify=true
 Type=Application
 Categories=System;FileManager;
 StartupWMClass=thunar-real
+NoDisplay=true
 EOF
 chmod +x /usr/share/applications/thunar-real.desktop
 

@@ -21,7 +21,6 @@ services:
       - PASSWORD=${PASSWORD:-AltereSuaSenhaForte123!}
       - LANG=${LANG:-pt_BR.UTF-8}
       - LANGUAGE=${LANGUAGE:-pt_BR:pt}
-      - LC_ALL=${LC_ALL:-pt_BR.UTF-8}
       - START_DOCKER=false
       - SELKIES_PRINTING_ENABLED=false
       - NO_AT_BRIDGE=1
