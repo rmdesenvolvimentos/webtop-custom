@@ -72,6 +72,93 @@ if [ -f /defaults/startwm.sh ]; then
     fi
 fi
 
+# Cria comando CLI conveniente para troca de idioma via terminal (set-language / mudar-idioma)
+cat << 'EOF' > /usr/local/bin/set-language
+#!/bin/bash
+# set-language: Utilitário CLI para trocar o idioma do sistema
+set -e
+
+LANG_INPUT="${1,,}"
+
+case "$LANG_INPUT" in
+    pt|pt_br|pt-br|portugues|português)
+        TARGET_LANG="pt_BR.UTF-8"
+        TARGET_LANGUAGE="pt_BR:pt"
+        NAME="Português (Brasil)"
+        ;;
+    en|en_us|en-us|english|ingles|inglês)
+        TARGET_LANG="en_US.UTF-8"
+        TARGET_LANGUAGE="en_US:en"
+        NAME="English (United States)"
+        ;;
+    es|es_es|es-es|espanol|español)
+        TARGET_LANG="es_ES.UTF-8"
+        TARGET_LANGUAGE="es_ES:es"
+        NAME="Español (España)"
+        ;;
+    de|de_de|de-de|deutsch|alemao|alemão)
+        TARGET_LANG="de_DE.UTF-8"
+        TARGET_LANGUAGE="de_DE:de"
+        NAME="Deutsch"
+        ;;
+    fr|fr_fr|fr-fr|francais|français|frances|francês)
+        TARGET_LANG="fr_FR.UTF-8"
+        TARGET_LANGUAGE="fr_FR:fr"
+        NAME="Français"
+        ;;
+    it|it_it|it-it|italiano)
+        TARGET_LANG="it_IT.UTF-8"
+        TARGET_LANGUAGE="it_IT:it"
+        NAME="Italiano"
+        ;;
+    *)
+        echo "========================================================"
+        echo " 🌐 Alterar Idioma do Sistema / Change System Language"
+        echo "========================================================"
+        echo "Uso: set-language <idioma>"
+        echo ""
+        echo "Exemplos:"
+        echo "  set-language pt    → Português (Brasil)"
+        echo "  set-language en    → English (US)"
+        echo "  set-language es    → Español (España)"
+        echo "  set-language it    → Italiano"
+        echo "  set-language de    → Deutsch"
+        echo "  set-language fr    → Français"
+        echo "========================================================"
+        exit 1
+        ;;
+esac
+
+echo "[*] Aplicando idioma: $NAME ($TARGET_LANG)..."
+
+# 1. Gera o locale caso necessário
+sudo locale-gen "$TARGET_LANG" >/dev/null 2>&1 || true
+
+# 2. Atualiza /etc/default/locale
+sudo update-locale LANG="$TARGET_LANG" LANGUAGE="$TARGET_LANGUAGE" LC_ALL="" 2>/dev/null || true
+echo -e "LANG=\"$TARGET_LANG\"\nLANGUAGE=\"$TARGET_LANGUAGE\"" | sudo tee /etc/default/locale >/dev/null
+
+# 3. Atualiza arquivos de sessão do usuário
+mkdir -p "$HOME/.config"
+cat << EOC > "$HOME/.config/locale.conf"
+LANG="$TARGET_LANG"
+LANGUAGE="$TARGET_LANGUAGE"
+EOC
+
+cat << EOC > "$HOME/.pam_environment"
+LANG DEFAULT=$TARGET_LANG
+LANGUAGE DEFAULT=$TARGET_LANGUAGE
+EOC
+
+echo "[✓] Idioma definido com sucesso para: $NAME"
+echo ""
+echo "Para aplicar na interface gráfica:"
+echo "  1. Reinicie o container pelo host: docker compose restart"
+echo "  2. OU feche e reabra a sessão/aplicativos."
+EOF
+chmod +x /usr/local/bin/set-language
+ln -sf /usr/local/bin/set-language /usr/local/bin/mudar-idioma 2>/dev/null || true
+
 # 2. Descompacta temas, ícones e wallpapers
 if [ -f /config-template/win11-theme-pack.tar.gz ]; then
     if [ ! -d /config/.themes/Windows-11-Dark-Blue ] || [ ! -d /config/.icons/Eleven-Dark ]; then
